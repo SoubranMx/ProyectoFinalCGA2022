@@ -226,6 +226,9 @@ float GRAVITY = 1.81;
 double tmv = 0;
 double startTimeJump = 0;
 
+//Shoot variables
+bool isShooting = false;
+
 // Definition for the particle system
 GLuint initVel, startTime;
 GLuint VAOParticles;
@@ -1160,6 +1163,25 @@ void modelMovementXboxPlayer() {
 			camera->mouseMoveCamera(0, axes[3], deltaTime);
 		}
 
+		//Shooting
+		if (!isShooting) {
+			if (axes[5] > 0.5) {
+				isShooting = true;
+				animationIndexPlayer = 6;
+				glfwSetTime(0.0f);
+				std::cout << "Time : " << glfwGetTime() << std::endl;
+			}
+		}
+		else{
+			std::cout << "Time !: " << glfwGetTime() << std::endl;
+
+			//if (glfwGetTime() > 1 * (38.0/60.0)) {
+			if (glfwGetTime() > 0.7) {
+				isShooting = false;
+			}
+		}
+		/*std::cout << "L2 : " << axes[4] << std::endl;
+		std::cout << "R2 : " << axes[5] << std::endl;*/
 		// CONTROL BOTONES 
 		/*
 		* XBOX 360
@@ -1221,7 +1243,7 @@ bool processInput(bool continueApplication) {
 	}
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
-		std::cout << "Esta presente el joystick" << std::endl;
+		//std::cout << "Esta presente el joystick" << std::endl;
 		int axesCount, buttonCount;
 		const unsigned char *buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
 				&buttonCount);
@@ -1335,7 +1357,7 @@ void applicationLoop() {
 	modelMatrixFountain = glm::scale(modelMatrixFountain,
 			glm::vec3(10.0f, 10.0f, 10.0f));
 
-	modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(-90.0f, 0.0f, 75.0f));
+	modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(-90.0f, 0.0f, -75.0f));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1931,7 +1953,8 @@ void applicationLoop() {
 		/*******************************************
 		 * Constantes de animaciones
 		 *******************************************/
-		animationIndexPlayer = 0;
+		if(!isShooting)
+			animationIndexPlayer = 0;
 		animationIndexZombie = 0;
 
 		/*******************************************
