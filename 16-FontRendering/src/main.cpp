@@ -122,6 +122,7 @@ Model modelFountain;
 Model modelWallA, modelWallB, modelWallC, modelWallD, modelWallE, modelWallF;
 // Model animate instance
 Model playerModelAnimate;
+Model zombieModelAnimate1;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 12, heightMapTexture);
 
@@ -171,8 +172,12 @@ glm::mat4 modelMatrixWallF = glm::mat4(1.0f);
 glm::mat4 modelMatrixPlayer = glm::mat4(1.0f);
 glm::vec3 escalamientoPlayer = glm::vec3(0.08f);
 glm::vec3 escalamientoWalls = glm::vec3(8.0f);
+//Zombies
+glm::mat4 modelMatrixZombie1 = glm::mat4(1.0f);
+glm::vec3 scaleZombie = glm::vec3(0.08f);
+
 /*
-* Animations
+* Animations Player
 * 0 Idle ?
 * 1 Walk
 * 2 WalkBackwards
@@ -181,9 +186,17 @@ glm::vec3 escalamientoWalls = glm::vec3(8.0f);
 * 5 RightSideWalk
 * 6 Shoot
 * 
+* Animations Zombie
+* 0 Idle
+* 1 Walk
+* 2 Die1
+* 3 Die2
+* 4 Reaction Shot
+* 5 Bite Neck
 */
 
 int animationIndexPlayer = 0;
+int animationIndexZombie = 0;
 int modelSelected = 1;
 bool enableCountSelected = true;
 
@@ -568,6 +581,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Player
 	playerModelAnimate.loadModel("../models/Player/PlayerMixamo.fbx");
 	playerModelAnimate.setShader(&shaderMulLighting);
+
+	//Zombies
+	zombieModelAnimate1.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate1.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -1013,6 +1030,8 @@ void destroy() {
 
 	// Custom objects animate
 	playerModelAnimate.destroy();
+	//Zombies
+	zombieModelAnimate1.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1313,6 +1332,8 @@ void applicationLoop() {
 			modelMatrixFountain[3][0], modelMatrixFountain[3][2]) + 0.2;
 	modelMatrixFountain = glm::scale(modelMatrixFountain,
 			glm::vec3(10.0f, 10.0f, 10.0f));
+
+	modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(-90.0f, 0.0f, 75.0f));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1899,6 +1920,7 @@ void applicationLoop() {
 		 * Constantes de animaciones
 		 *******************************************/
 		animationIndexPlayer = 0;
+		animationIndexZombie = 0;
 
 		/*******************************************
 		 * State machines
@@ -2004,6 +2026,8 @@ void prepareScene() {
 
 	//Player
 	playerModelAnimate.setShader(&shaderMulLighting);
+	//Zombies
+	zombieModelAnimate1.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -2021,6 +2045,8 @@ void prepareDepthScene() {
 
 	//Player
 	playerModelAnimate.setShader(&shaderDepth);
+	//Zombies
+	zombieModelAnimate1.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -2123,6 +2149,14 @@ void renderScene(bool renderParticles) {
 	modelMatrixPlayerBody = glm::scale(modelMatrixPlayerBody, escalamientoPlayer);
 	playerModelAnimate.setAnimationIndex(animationIndexPlayer);
 	playerModelAnimate.render(modelMatrixPlayerBody);
+
+	//Zombies
+
+	modelMatrixZombie1[3][1] = terrain.getHeightTerrain(modelMatrixZombie1[3][0], modelMatrixZombie1[3][2]);
+	glm::mat4 modelMatrixZombieBody1 = glm::mat4(modelMatrixZombie1);
+	modelMatrixZombieBody1 = glm::scale(modelMatrixZombieBody1, scaleZombie);
+	zombieModelAnimate1.setAnimationIndex(animationIndexZombie);
+	zombieModelAnimate1.render(modelMatrixZombieBody1);
 
 	/*******************************************
 	* Update the position with alpha objects
