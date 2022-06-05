@@ -193,6 +193,8 @@ glm::vec3 scaleZombie = glm::vec3(0.08f);
 * 3 Die2
 * 4 Reaction Shot
 * 5 Bite Neck
+* 6 ZombieDieDownPose1
+* 7 ZombieDieDownPose2
 */
 
 int animationIndexPlayer = 0;
@@ -1798,6 +1800,16 @@ void applicationLoop() {
 		playerCollider.c = glm::vec3(modelMatrixColliderPlayer[3]);
 		playerCollider.e = playerModelAnimate.getObb().e * escalamientoPlayer * glm::vec3(0.4f, 1.0f, 1.5f);
 		addOrUpdateColliders(collidersOBB, "Player", playerCollider, modelMatrixPlayer);
+
+		//Collider de Zombies
+		AbstractModel::OBB zombieCollider1;
+		glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
+		zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
+		modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
+		modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
+		zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
+		zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+		addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
 
 		/*******************************************
 		 * Render de colliders
