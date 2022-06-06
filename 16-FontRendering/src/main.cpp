@@ -62,6 +62,11 @@ int screenHeight;
 
 const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
+//Random seed for key location
+std::random_device device;
+std::mt19937 rng(device());
+std::uniform_int_distribution<std::mt19937::result_type> dist5(1, 5);
+
 std::string blendMapTexture = "../Textures/Proyecto/blendMap.png";
 std::string heightMapTexture = "../Textures/Proyecto/heightMap.png";
 std::string pathTexture = "../Textures/Proyecto/environment/Path/path.jpg";
@@ -132,6 +137,10 @@ Model zombieModelAnimate4;
 Model zombieModelAnimate5;
 Model zombieModelAnimate6;
 Model zombieModelAnimate7;
+
+//Keys
+Model keyModelAnimateA;
+Model keyModelAnimateB;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 12, heightMapTexture);
 
@@ -190,6 +199,12 @@ glm::mat4 modelMatrixZombie5 = glm::mat4(1.0f);
 glm::mat4 modelMatrixZombie6 = glm::mat4(1.0f);
 glm::mat4 modelMatrixZombie7 = glm::mat4(1.0f);
 glm::vec3 scaleZombie = glm::vec3(0.08f);
+
+//Keys
+glm::mat4 modelMatrixKeyA = glm::mat4(1.0f);
+glm::mat4 modelMatrixKeyB = glm::mat4(1.0f);
+glm::vec3 scaleKey = glm::vec3(0.08f);
+//glm::vec3 scaleKey = glm::vec3(1.0f);
 
 /*
 * Animations Player
@@ -264,11 +279,16 @@ bool isZombieDying[7] = { false, false, false, false, false, false, false };
 bool isZombieAlive[7] = { true, true, true, true, true, true, true };
 bool isZombieInRange[7] = { false, false, false, false, false, false, false };
 
-//int zombieLife1 = 3;
-//bool isZombie1Shooted = false;
-//bool isZombie1Dying = false;
-//bool isZombie1Alive = true;
-//bool izZombie1InRange = false;
+
+//Keys Locations
+glm::vec3 KeyAPos = glm::vec3(46.96f , 2.0f, -77.36f);
+glm::vec3 KeyBPos = glm::vec3(82.8f	 , 2.0f,  62.48f);
+glm::vec3 KeyCPos = glm::vec3(-14.88f, 2.0f, -64.48f);
+glm::vec3 KeyDPos = glm::vec3(-13.76f, 2.0f, -14.0f );
+glm::vec3 KeyEPos = glm::vec3(-23.52f, 2.0f,  39.84f);
+int keySlotSelected = 0;
+int keySlotSelectedB = 0;
+bool isKeyCollected[2] = { false, false };
 
 //Rays
 glm::vec3 rayShootDirection;
@@ -661,6 +681,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	zombieModelAnimate6.setShader(&shaderMulLighting);
 	zombieModelAnimate7.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
 	zombieModelAnimate7.setShader(&shaderMulLighting);
+
+	//Keys
+	keyModelAnimateA.loadModel("../models/Key/Key.fbx");
+	keyModelAnimateA.setShader(&shaderMulLighting);
+	keyModelAnimateA.setAnimationIndex(0);
+
+	keyModelAnimateB.loadModel("../models/Key/Key.fbx");
+	keyModelAnimateB.setShader(&shaderMulLighting);
+	keyModelAnimateB.setAnimationIndex(0);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -1116,6 +1145,9 @@ void destroy() {
 	zombieModelAnimate5.destroy();
 	zombieModelAnimate6.destroy();
 	zombieModelAnimate7.destroy();
+
+	keyModelAnimateA.destroy();
+	keyModelAnimateB.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1866,6 +1898,51 @@ void applicationLoop() {
 	modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(20.48f, 0.0f, -92.16f));
 	modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(89.07f, 0.0f, -92.9f));
 
+	//Keys
+	keySlotSelected = dist5(rng);
+	switch (keySlotSelected) {
+	case 1:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyAPos);
+		break;
+	case 2:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyBPos);
+		break;
+	case 3:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyCPos);
+		break;
+	case 4:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyDPos);
+		break;
+	case 5:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyEPos);
+		break;
+	}
+	keySlotSelectedB = dist5(rng);
+	while (keySlotSelectedB == keySlotSelected) {
+		keySlotSelectedB = dist5(rng);
+	}
+
+	switch (keySlotSelectedB) {
+	case 1:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyAPos);
+		break;
+	case 2:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyBPos);
+		break;
+	case 3:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyCPos);
+		break;
+	case 4:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyDPos);
+		break;
+	case 5:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyEPos);
+		break;
+	}
+
+	modelMatrixKeyA = glm::scale(modelMatrixKeyA, scaleKey);
+	modelMatrixKeyB = glm::scale(modelMatrixKeyB, scaleKey);
+
 	lastTime = TimeManager::Instance().GetTime();
 
 	// Time for the particles animation
@@ -2422,8 +2499,32 @@ void applicationLoop() {
 		zombieCollider7.c = glm::vec3(modelMatrixColliderZombie7[3]);
 		zombieCollider7.e = zombieModelAnimate7.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
 		addOrUpdateColliders(collidersOBB, "Zombie7", zombieCollider7, modelMatrixZombie7);
+				
+		//Keys
+		AbstractModel::OBB keyColliderA;
+		glm::mat4 modelMatrixColliderKeyA = glm::mat4(modelMatrixKeyA);
+		keyColliderA.u = glm::quat_cast(modelMatrixKeyA);
+		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
+		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
+		if(isKeyCollected[0] == false)
+			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, keyModelAnimateA.getObb().c);
+		else
+			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, glm::vec3(0.0f, -1050.0f, 0.0f));
+		keyColliderA.c = glm::vec3(modelMatrixColliderKeyA[3]);
+		keyColliderA.e = keyModelAnimateA.getObb().e * scaleKey * glm::vec3(100.0f);
+		addOrUpdateColliders(collidersOBB, "KeyA", keyColliderA, modelMatrixKeyA);
 
-
+		AbstractModel::OBB keyColliderB;
+		glm::mat4 modelMatrixColliderKeyB = glm::mat4(modelMatrixKeyB);
+		keyColliderB.u = glm::quat_cast(modelMatrixKeyB);
+		modelMatrixColliderKeyB = glm::scale(modelMatrixColliderKeyB, scaleKey);
+		if(isKeyCollected[1] == false)
+			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, keyModelAnimateB.getObb().c);
+		else
+			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, glm::vec3(0.0f, -1050.0f, 0.0f));
+		keyColliderB.c = glm::vec3(modelMatrixColliderKeyB[3]);
+		keyColliderB.e = keyModelAnimateB.getObb().e * scaleKey * glm::vec3(100.0f);
+		addOrUpdateColliders(collidersOBB, "KeyB", keyColliderB, modelMatrixKeyB);
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
@@ -2467,16 +2568,22 @@ void applicationLoop() {
 			for (std::map<std::string,
 					std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator jt =
 					collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
-				if (it != jt
-						&& testOBBOBB(std::get<0>(it->second),
-								std::get<0>(jt->second))) {
+				if (it != jt && testOBBOBB(std::get<0>(it->second),std::get<0>(jt->second))) {
 					std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 					isCollision = true;
+
+					if (it->first.compare("Player") == 0) {
+						if (jt->first.compare("KeyA") == 0) {
+							isKeyCollected[0] = true;
+						}
+						if (jt->first.compare("KeyB") == 0) {
+							isKeyCollected[1] = true;
+						}
+					}
 				}
 			}
-			addOrUpdateCollisionDetection(collisionDetection, it->first,
-					isCollision);
+			addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
 		}
 
 		for (std::map<std::string,
@@ -2694,8 +2801,6 @@ void applicationLoop() {
 			target = playerCollider.c;
 			target.y += playerCollider.e.y;
 		}
-		else {
-		}
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
@@ -2784,6 +2889,9 @@ void prepareScene() {
 	zombieModelAnimate5.setShader(&shaderMulLighting);
 	zombieModelAnimate6.setShader(&shaderMulLighting);
 	zombieModelAnimate7.setShader(&shaderMulLighting);
+
+	keyModelAnimateA.setShader(&shaderMulLighting);
+	keyModelAnimateB.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -2809,6 +2917,9 @@ void prepareDepthScene() {
 	zombieModelAnimate5.setShader(&shaderDepth);
 	zombieModelAnimate6.setShader(&shaderDepth);
 	zombieModelAnimate7.setShader(&shaderDepth);
+
+	keyModelAnimateA.setShader(&shaderDepth);
+	keyModelAnimateB.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -2894,6 +3005,11 @@ void renderScene(bool renderParticles) {
 	modelWallD.render(modelMatrixWallD);
 	modelWallE.render(modelMatrixWallE);
 	modelWallF.render(modelMatrixWallF);
+
+	if(isKeyCollected[0] == false)
+		keyModelAnimateA.render(modelMatrixKeyA);
+	if(isKeyCollected[1] == false)
+		keyModelAnimateB.render(modelMatrixKeyB);
 
 	
 	/*******************************************
