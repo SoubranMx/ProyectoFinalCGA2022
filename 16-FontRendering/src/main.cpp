@@ -1235,15 +1235,49 @@ void modelMovementXboxPlayer() {
 }
 
 void playerMovementKeyboard() {
-
+	//Rotate left
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(1.0f * 0.8f), glm::vec3(0, 1, 0));
+		animationIndexPlayer = 0;
+	}
+	//Rotate right
+	else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-1.0f * 0.8f), glm::vec3(0, 1, 0));
+		animationIndexPlayer = 0;
+	}
+	//Move forward
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) {
+		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, -0.3));
+		animationIndexPlayer = 1;
+	}
+	//Move backwards
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, 0.3));
+		animationIndexPlayer = 2;
+	}
+	//Shoot
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		if (!isShooting) {
+			isShooting = true;
+			animationIndexPlayer = 6;
+			glfwSetTime(0.0f);
+		}
+		else {
+			std::cout << "Time !: " << glfwGetTime() << std::endl;
+			if (glfwGetTime() > 0.7)
+				isShooting = false;
+		}
+	}
 }
 bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
+	bool isJoystickPresent = false;
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
 		//std::cout << "Esta presente el joystick" << std::endl;
+		isJoystickPresent = true;
 		int axesCount, buttonCount;
 		const unsigned char *buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
 				&buttonCount);
@@ -1274,26 +1308,7 @@ bool processInput(bool continueApplication) {
 
 	
 
-	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(1.0f),
-				glm::vec3(0, 1, 0));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-1.0f),
-				glm::vec3(0, 1, 0));
-		animationIndex = 0;
-	}
-	if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, 0.02));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, -0.02));
-		animationIndex = 0;
-	}*/
+	
 
 	bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	if(!isJumpPlayer && keySpaceStatus){
@@ -1303,7 +1318,8 @@ bool processInput(bool continueApplication) {
 	}
 
 	playerMovementKeyboard();
-	modelMovementXboxPlayer();
+	if(isJoystickPresent)
+		modelMovementXboxPlayer();
 
 	glfwPollEvents();
 	return continueApplication;
