@@ -264,4 +264,31 @@ bool intersectRayAABB(glm::vec3 p1, glm::vec3 p2, glm::vec3 d, AbstractModel::OB
 	return false;
 }
 
+bool intersectRayAABBv2(glm::vec3 p1, glm::vec3 p2, glm::vec3 d, AbstractModel::AABB aabb) {
+	float tmin = -FLT_MAX, tmax = FLT_MAX;
+	if (!testSLABPlane(p1.x, d.x, aabb.mins.x, aabb.maxs.x, tmin, tmax))
+		return false;
+	if (!testSLABPlane(p1.y, d.y, aabb.mins.y, aabb.maxs.y, tmin, tmax))
+		return false;
+	if (!testSLABPlane(p1.z, d.z, aabb.mins.z, aabb.maxs.z, tmin, tmax))
+		return false;
+	if (tmin >= 0 && tmin <= glm::distance(p1, p2))
+		return true;
+	return false;
+}
+
+bool intersectRayOBB(glm::vec3 p1, glm::vec3 p2, glm::vec3 d, AbstractModel::OBB obb) {
+	glm::quat qinv = glm::inverse(obb.u);
+	p1 = qinv * glm::vec4(p1, 1.0);
+	p2 = qinv * glm::vec4(p2, 1.0);
+	d = qinv * glm::vec4(d, 1.0);
+	obb.c = qinv * glm::vec4(obb.c, 1.0);
+	AbstractModel::AABB aabb;
+	aabb.mins = obb.c - obb.e;
+	aabb.maxs = obb.c + obb.e;
+	return intersectRayAABBv2(p1, p2, d, aabb);
+}
+
+
+
 #endif /* COLISIONES_H_ */

@@ -106,6 +106,9 @@ Sphere sphereCollider(10, 10);
 Box boxViewDepth;
 Box boxLightViewBox;
 
+//Rayos
+Cylinder cylinderShoot(10, 10, 0.05, 0.05);
+
 ShadowBox *shadowBox;
 
 // Models complex instances
@@ -198,7 +201,7 @@ glm::vec3 scaleZombie = glm::vec3(0.08f);
 */
 
 int animationIndexPlayer = 0;
-int animationIndexZombie = 0;
+int animationIndexZombie1 = 0;
 int modelSelected = 1;
 bool enableCountSelected = true;
 
@@ -228,6 +231,25 @@ double startTimeJump = 0;
 
 //Shoot variables
 bool isShooting = false;
+double deltaTimeShoot = 0.0f, currTimeShoot = 0.0f, lastTimeShoot = 0.0f;
+
+//Zombie variables
+
+double deltaTimeShooted = 0.0f, deltaTimeDying = 0.0f;
+double currTimeShooted = 0.0f, lastTimeShooted = 0.0f;
+double currTimeDying = 0.0f, lastTimeDying = 0.0f;
+
+
+int zombieLife1 = 3;
+bool isZombie1Shooted = false;
+bool isZombie1Dying = false;
+bool isZombie1Alive = true;
+
+//Rays
+glm::vec3 rayShootDirection;
+glm::vec3 rayShootOri;
+glm::vec3 rayShootTar;
+
 
 // Definition for the particle system
 GLuint initVel, startTime;
@@ -552,6 +574,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 	terrain.setPosition(glm::vec3(100, 0, 100));
+
+	//Rayos
+	cylinderShoot.init();
+	cylinderShoot.setShader(&shader);
+	cylinderShoot.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 
 	//Lamp models
 	modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
@@ -1017,6 +1044,8 @@ void destroy() {
 	boxViewDepth.destroy();
 	boxLightViewBox.destroy();
 
+	cylinderShoot.destroy();
+
 	// Terrains objects Delete
 	terrain.destroy();
 
@@ -1168,16 +1197,21 @@ void modelMovementXboxPlayer() {
 			if (axes[5] > 0.5) {
 				isShooting = true;
 				animationIndexPlayer = 6;
-				glfwSetTime(0.0f);
-				std::cout << "Time : " << glfwGetTime() << std::endl;
+				//glfwSetTime(0.0f);
+				currTimeShoot = glfwGetTime();
+				deltaTimeShoot = 0.0f;
+				lastTimeShoot = glfwGetTime();
 			}
 		}
 		else{
-			std::cout << "Time !: " << glfwGetTime() << std::endl;
-
-			//if (glfwGetTime() > 1 * (38.0/60.0)) {
-			if (glfwGetTime() > 0.7) {
+			currTimeShoot = glfwGetTime();
+			deltaTimeShoot += currTimeShoot - lastTimeShoot;
+			lastTimeShoot = currTimeShoot;
+			if (deltaTimeShoot > 0.7) {
 				isShooting = false;
+				currTimeShoot = glfwGetTime();
+				deltaTimeShoot = 0.0f;
+				lastTimeShoot = glfwGetTime();
 			}
 		}
 		/*std::cout << "L2 : " << axes[4] << std::endl;
@@ -1840,14 +1874,16 @@ void applicationLoop() {
 		addOrUpdateColliders(collidersOBB, "Player", playerCollider, modelMatrixPlayer);
 
 		//Collider de Zombies
-		AbstractModel::OBB zombieCollider1;
-		glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
-		zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
-		modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
-		modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
-		zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
-		zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+		if (isZombie1Alive) {
+			AbstractModel::OBB zombieCollider1;
+			glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
+			zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
+			modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
+			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
+			zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
+			zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+		}
 
 		/*******************************************
 		 * Render de colliders
@@ -1967,16 +2003,83 @@ void applicationLoop() {
 		}
 
 		/*******************************************
+		* Ray Test Colisions
+		*******************************************/
+
+		for (std::map < std::string, std::tuple < AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it = collidersOBB.begin(); it != collidersOBB.end(); it++) {
+			//Movimiento con ShootRay
+			if (intersectRayOBB(rayShootOri, rayShootTar, rayShootDirection, std::get<0>(it->second))) {
+				
+				if (it->first.compare("Zombie1") == 0) {
+					//std::cout << "Collision " << it->first << " with ShootRay" << std::endl;
+					if (isShooting) { 
+						//Atacar a player?
+						isZombie1Shooted = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+			}
+		}
+
+
+		/*******************************************
 		 * Constantes de animaciones
 		 *******************************************/
 		if(!isShooting)
 			animationIndexPlayer = 0;
-		animationIndexZombie = 0;
+		
+		if(!isZombie1Shooted && !isZombie1Dying && isZombie1Alive)
+			animationIndexZombie1 = 0;
+		else if (!isZombie1Alive)
+			animationIndexZombie1 = 6;
 
 		/*******************************************
 		 * State machines
 		 *******************************************/
+		if (isZombie1Shooted == true && isZombie1Alive == true && zombieLife1 > 0) {
+			currTimeShooted = glfwGetTime();
+			deltaTimeShooted += currTimeShooted - lastTimeShooted;
+			lastTimeShooted = currTimeShooted;
 
+			if (deltaTimeShooted < 1 * (102.0 / 60.0)) {
+				animationIndexZombie1 = 4;
+			}
+			else {
+				isZombie1Shooted = false;
+				zombieLife1--;
+				currTimeShooted = glfwGetTime();
+				lastTimeShooted = glfwGetTime();
+				deltaTimeShooted = 0;
+				if (zombieLife1 <= 0) {
+					currTimeDying = glfwGetTime();
+					deltaTimeDying = 0;
+					lastTimeDying = glfwGetTime();
+					isZombie1Dying = true;
+				}
+			}
+		}
+
+
+		if (isZombie1Dying == true && isZombie1Alive == true) {
+			currTimeDying = glfwGetTime();
+			deltaTimeDying += currTimeDying - lastTimeDying;
+			lastTimeDying = currTimeDying;
+			std::cout << "Delta time " << deltaTimeDying << std::endl;
+			if (deltaTimeDying <= 1 * (100.0 / 60.0)) {
+				animationIndexZombie1 = 2;
+				std::cout << "Dying anim " << deltaTimeDying << std::endl;
+			}
+			else {
+				isZombie1Dying = false;
+				isZombie1Alive = false;
+				currTimeDying = glfwGetTime();
+				deltaTimeDying = 0;
+				lastTimeDying = glfwGetTime();
+				animationIndexZombie1 = 6;
+			}
+		}
 
 		/*******************************************
 		 * Text Rendering
@@ -2206,8 +2309,25 @@ void renderScene(bool renderParticles) {
 	modelMatrixZombie1[3][1] = terrain.getHeightTerrain(modelMatrixZombie1[3][0], modelMatrixZombie1[3][2]);
 	glm::mat4 modelMatrixZombieBody1 = glm::mat4(modelMatrixZombie1);
 	modelMatrixZombieBody1 = glm::scale(modelMatrixZombieBody1, scaleZombie);
-	zombieModelAnimate1.setAnimationIndex(animationIndexZombie);
+	zombieModelAnimate1.setAnimationIndex(animationIndexZombie1);
 	zombieModelAnimate1.render(modelMatrixZombieBody1);
+
+	/*******************************************
+	* Rayos
+	*******************************************/
+	//Ray in Player view direction
+	glm::mat4 modelMatrixPlayerShootRay = glm::mat4(modelMatrixPlayer);
+	modelMatrixPlayerShootRay = glm::translate(modelMatrixPlayerShootRay, glm::vec3(0, 10.0, 0));
+	rayShootDirection = glm::normalize(glm::vec3(-modelMatrixPlayerShootRay[2]));
+	rayShootOri = glm::vec3(modelMatrixPlayerShootRay[3]);
+	rayShootTar = rayShootOri + 30.0f + rayShootDirection;
+	glm::vec3 rayShootDmd = rayShootOri + 15.0f * rayShootDirection;
+	modelMatrixPlayerShootRay[3] = glm::vec4(rayShootDmd, 1.0);
+	modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+	//modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+	modelMatrixPlayerShootRay = glm::scale(modelMatrixPlayerShootRay, glm::vec3(1.0, 30.0, 1.0));
+	cylinderShoot.render(modelMatrixPlayerShootRay);
+
 
 	/*******************************************
 	* Update the position with alpha objects
