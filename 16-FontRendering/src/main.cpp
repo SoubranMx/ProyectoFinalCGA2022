@@ -204,6 +204,7 @@ int animationIndexPlayer = 0;
 int animationIndexZombie1 = 0;
 int modelSelected = 1;
 bool enableCountSelected = true;
+bool renderEverything = true;
 
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
@@ -244,6 +245,7 @@ int zombieLife1 = 3;
 bool isZombie1Shooted = false;
 bool isZombie1Dying = false;
 bool isZombie1Alive = true;
+bool izZombie1InRange = false;
 
 //Rays
 glm::vec3 rayShootDirection;
@@ -325,6 +327,9 @@ void renderScene(bool renderParticles = true);
 //Funciones agregadas para seccionar el desastre
 void modelMovementXboxPlayer();
 void playerMovementKeyboard();
+void stateZombie1();
+void stateZombie2();
+void stateZombie3();
 
 
 void initParticleBuffers() {
@@ -1265,6 +1270,9 @@ void modelMovementXboxPlayer() {
 		if (botones[13] == GLFW_PRESS) {
 			std::cout << "Se presiono boton 13" << buttonCount << std::endl;
 		}
+		//select + start + L1 + R2 => salir de la app
+		if (botones[6] == GLFW_PRESS && botones[7] == GLFW_PRESS && botones[4] == GLFW_PRESS && botones[5] == GLFW_PRESS)
+			exitApp = true;
 	}
 }
 
@@ -1303,6 +1311,7 @@ void playerMovementKeyboard() {
 		}
 	}
 }
+
 bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
@@ -1312,11 +1321,6 @@ bool processInput(bool continueApplication) {
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
 		//std::cout << "Esta presente el joystick" << std::endl;
 		isJoystickPresent = true;
-		int axesCount, buttonCount;
-		const unsigned char *buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
-				&buttonCount);
-		if (buttons[6] == GLFW_PRESS && buttons[7] == GLFW_PRESS && buttons[4] == GLFW_PRESS && buttons[5] == GLFW_PRESS)
-			exitApp = true;
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -1339,11 +1343,7 @@ bool processInput(bool continueApplication) {
 		std::cout << "modelSelected:" << modelSelected << std::endl;
 	} else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
 		enableCountSelected = true;
-
 	
-
-	
-
 	bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	if(!isJumpPlayer && keySpaceStatus){
 		isJumpPlayer = true;
@@ -1358,6 +1358,67 @@ bool processInput(bool continueApplication) {
 	glfwPollEvents();
 	return continueApplication;
 }
+
+void stateZombie1() {
+	//Caminar si rayo colisiona con player
+	float zombieSpeed = 1;
+	if (izZombie1InRange && isZombie1Alive && !isZombie1Shooted) {
+		animationIndexZombie1 = 1;
+		if (zombieLife1 == 3)
+			zombieSpeed = 1;
+		else if (zombieLife1 == 2)
+			zombieSpeed = 1.5;
+		else
+			zombieSpeed = 2.5;
+		modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0.1f * zombieSpeed));
+	}
+
+	//Animacion si el zombie ha sido disparado
+	if (isZombie1Shooted == true && isZombie1Alive == true && zombieLife1 > 0) {
+		currTimeShooted = glfwGetTime();
+		deltaTimeShooted += currTimeShooted - lastTimeShooted;
+		lastTimeShooted = currTimeShooted;
+		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
+		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
+			animationIndexZombie1 = 4;
+		}
+		else {
+			isZombie1Shooted = false;
+			zombieLife1--;
+			currTimeShooted = glfwGetTime();
+			lastTimeShooted = glfwGetTime();
+			deltaTimeShooted = 0;
+			if (zombieLife1 <= 0) {
+				currTimeDying = glfwGetTime();
+				deltaTimeDying = 0;
+				lastTimeDying = glfwGetTime();
+				isZombie1Dying = true;
+			}
+		}
+	}
+
+	//Animacion si zombie ya no tiene vida
+	if (isZombie1Dying == true && isZombie1Alive == true) {
+		currTimeDying = glfwGetTime();
+		deltaTimeDying += currTimeDying - lastTimeDying;
+		lastTimeDying = currTimeDying;
+		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
+			animationIndexZombie1 = 2;
+		}
+		else {
+			isZombie1Dying = false;
+			isZombie1Alive = false;
+			currTimeDying = glfwGetTime();
+			deltaTimeDying = 0;
+			lastTimeDying = glfwGetTime();
+			animationIndexZombie1 = 6;
+		}
+	}
+}
+
+void stateZombie2(){}
+
+void stateZombie3(){}
 
 void applicationLoop() {
 	bool psi = true;
@@ -1874,46 +1935,49 @@ void applicationLoop() {
 		addOrUpdateColliders(collidersOBB, "Player", playerCollider, modelMatrixPlayer);
 
 		//Collider de Zombies
-		if (isZombie1Alive) {
-			AbstractModel::OBB zombieCollider1;
-			glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
-			zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
-			modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
+		AbstractModel::OBB zombieCollider1;
+		glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
+		zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
+		modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
+		if(isZombie1Alive)
 			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
-			zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
-			zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-			addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
-		}
+		else
+			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, glm::vec3(0, -150.0f, 0));
+		zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
+		zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+		addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
 
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		for (std::map<std::string,
-				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
-				collidersOBB.begin(); it != collidersOBB.end(); it++) {
-			glm::mat4 matrixCollider = glm::mat4(1.0);
-			matrixCollider = glm::translate(matrixCollider,
-					std::get<0>(it->second).c);
-			matrixCollider = matrixCollider
-					* glm::mat4(std::get<0>(it->second).u);
-			matrixCollider = glm::scale(matrixCollider,
-					std::get<0>(it->second).e * 2.0f);
-			boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-			boxCollider.enableWireMode();
-			boxCollider.render(matrixCollider);
-		}
+		if (renderEverything) {
+			for (std::map<std::string,
+					std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
+					collidersOBB.begin(); it != collidersOBB.end(); it++) {
+				glm::mat4 matrixCollider = glm::mat4(1.0);
+				matrixCollider = glm::translate(matrixCollider,
+						std::get<0>(it->second).c);
+				matrixCollider = matrixCollider
+						* glm::mat4(std::get<0>(it->second).u);
+				matrixCollider = glm::scale(matrixCollider,
+						std::get<0>(it->second).e * 2.0f);
+				boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+				boxCollider.enableWireMode();
+				boxCollider.render(matrixCollider);
+			}
 
-		for (std::map<std::string,
-				std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
-				collidersSBB.begin(); it != collidersSBB.end(); it++) {
-			glm::mat4 matrixCollider = glm::mat4(1.0);
-			matrixCollider = glm::translate(matrixCollider,
-					std::get<0>(it->second).c);
-			matrixCollider = glm::scale(matrixCollider,
-					glm::vec3(std::get<0>(it->second).ratio * 2.0f));
-			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-			sphereCollider.enableWireMode();
-			sphereCollider.render(matrixCollider);
+			for (std::map<std::string,
+					std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
+					collidersSBB.begin(); it != collidersSBB.end(); it++) {
+				glm::mat4 matrixCollider = glm::mat4(1.0);
+				matrixCollider = glm::translate(matrixCollider,
+						std::get<0>(it->second).c);
+				matrixCollider = glm::scale(matrixCollider,
+						glm::vec3(std::get<0>(it->second).ratio * 2.0f));
+				sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+				sphereCollider.enableWireMode();
+				sphereCollider.render(matrixCollider);
+			}
 		}
 
 		/*******************************************
@@ -2012,6 +2076,7 @@ void applicationLoop() {
 				
 				if (it->first.compare("Zombie1") == 0) {
 					//std::cout << "Collision " << it->first << " with ShootRay" << std::endl;
+					izZombie1InRange = true;
 					if (isShooting) { 
 						//Atacar a player?
 						isZombie1Shooted = true;
@@ -2038,48 +2103,7 @@ void applicationLoop() {
 		/*******************************************
 		 * State machines
 		 *******************************************/
-		if (isZombie1Shooted == true && isZombie1Alive == true && zombieLife1 > 0) {
-			currTimeShooted = glfwGetTime();
-			deltaTimeShooted += currTimeShooted - lastTimeShooted;
-			lastTimeShooted = currTimeShooted;
-
-			if (deltaTimeShooted < 1 * (102.0 / 60.0)) {
-				animationIndexZombie1 = 4;
-			}
-			else {
-				isZombie1Shooted = false;
-				zombieLife1--;
-				currTimeShooted = glfwGetTime();
-				lastTimeShooted = glfwGetTime();
-				deltaTimeShooted = 0;
-				if (zombieLife1 <= 0) {
-					currTimeDying = glfwGetTime();
-					deltaTimeDying = 0;
-					lastTimeDying = glfwGetTime();
-					isZombie1Dying = true;
-				}
-			}
-		}
-
-
-		if (isZombie1Dying == true && isZombie1Alive == true) {
-			currTimeDying = glfwGetTime();
-			deltaTimeDying += currTimeDying - lastTimeDying;
-			lastTimeDying = currTimeDying;
-			std::cout << "Delta time " << deltaTimeDying << std::endl;
-			if (deltaTimeDying <= 1 * (100.0 / 60.0)) {
-				animationIndexZombie1 = 2;
-				std::cout << "Dying anim " << deltaTimeDying << std::endl;
-			}
-			else {
-				isZombie1Dying = false;
-				isZombie1Alive = false;
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				animationIndexZombie1 = 6;
-			}
-		}
+		stateZombie1();
 
 		/*******************************************
 		 * Text Rendering
@@ -2326,7 +2350,8 @@ void renderScene(bool renderParticles) {
 	modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
 	//modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
 	modelMatrixPlayerShootRay = glm::scale(modelMatrixPlayerShootRay, glm::vec3(1.0, 30.0, 1.0));
-	cylinderShoot.render(modelMatrixPlayerShootRay);
+	if(renderEverything)
+		cylinderShoot.render(modelMatrixPlayerShootRay);
 
 
 	/*******************************************

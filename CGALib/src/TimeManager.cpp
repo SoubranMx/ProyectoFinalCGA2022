@@ -49,7 +49,12 @@ double TimeManager::CalculateFrameRate(bool writeToConsole = false) {
 	}
 
 	// Regresa el mas reciente calculo de los FPS
+	currentFPSshow = currentFPS;
 	return currentFPS;
+}
+
+double TimeManager::getFPS() {
+	return currentFPSshow;
 }
 
 double TimeManager::GetRunningTime(){

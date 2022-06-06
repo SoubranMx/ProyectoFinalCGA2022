@@ -42,6 +42,7 @@ public:
 
 	double GetRunningTime();
 	double GetTime();
+	double getFPS();
 
 	void Sleep(int milliseconds);
 
@@ -49,6 +50,7 @@ public:
 	double StartTime = 0;
 
 	double CurrentTime = 0;
+	double currentFPSshow = 0;
 
 private:
 
