@@ -414,9 +414,9 @@ ALenum format;
 ALvoid *data;
 int ch;
 ALboolean loop;
-//std::vector<bool> sourcesPlay = {  0		1		2	  3     4     5     6     7     8     9      10     11      12     13     14     15     16     17    18 };
-//std::vector<bool> sourcesPlay = { fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
-std::vector<bool> sourcesPlay = { true,   false,   true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false };
+//								{  0		1	  2	      3       4       5       6       7       8        9       10      11      12      13      14      15     16       17    18 };
+//								{ fire,gunshot,	 z1n,	 z2n,    z3n,    z4n,    z5n,    z6n,    z7n,     z1d,    z2d,    z3d,    z4d,    z5d,    z6d,    z7d,   keyA,   keyB,  Walk};
+std::vector<bool> sourcesPlay = { true,	false,	true,	true,	true,	true,	true,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false };
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
@@ -435,26 +435,12 @@ void renderScene(bool renderParticles = true);
 //Funciones agregadas para seccionar el desastre
 void modelMovementXboxPlayer();
 void playerMovementKeyboard();
-void stateZombie1(int zN);
-void stateZombie2(int zN);
-void stateZombie3(int zN);
-void stateZombie4(int zN);
-void stateZombie5(int zN);
-void stateZombie6(int zN);
-void stateZombie7(int zN);
+void stateZombieGeneral(int zN);
 void configAudioListeners();
 void openALSoundData();
 
 
 void openALSoundData() {
-	/*source0Pos[0] = modelMatrixFountain[3].x;
-	source0Pos[1] = modelMatrixFountain[3].y;
-	source0Pos[2] = modelMatrixFountain[3].z;
-	alSourcefv(source[0], AL_POSITION, source0Pos);*/
-	
-	
-
-	
 	// Listener for the Third person camera
 	listenerPos[0] = modelMatrixPlayer[3].x;
 	listenerPos[1] = modelMatrixPlayer[3].y;
@@ -507,17 +493,16 @@ void configAudioListeners() {
 	}
 	// Config source 0
 	/* Sources:
-		* 0 - Fire
-		* 1 - Gunshot
-		* 2 - ZombieNormal
-		* 3 - ZombieDying
-		* 4 - Collect Key
-		* 5 - Player Walk
+		* 0		- Fire
+		* 1		- Gunshot
+		* 2-8	- ZombieNormal
+		* 9-15	- ZombieDying
+		* 16-17 - Collect Key
+		* 18	- Player Walk
 	*/
 	// Generate buffers, or else no sound will happen!
 	alGenBuffers(NUM_BUFFERS, buffer);
 	buffer[0] = alutCreateBufferFromFile("../sounds/fire.wav");
-	//buffer[1] = alutCreateBufferFromFile("../sounds/fountain.wav");
 	buffer[1] = alutCreateBufferFromFile("../sounds/P226-9mm-Close-Single-Gunshot-C.wav");
 	buffer[2] = alutCreateBufferFromFile("../sounds/Zombie-Long-Attack-A5.wav");
 	buffer[3] = alutCreateBufferFromFile("../sounds/Zombie-Dying-and-Choking-A1.wav");
@@ -1550,6 +1535,11 @@ void modelMovementXboxPlayer() {
 			}
 		}
 		else{
+			//Gunshot
+			sourceGunPos[0] = modelMatrixPlayer[3].x;
+			sourceGunPos[1] = modelMatrixPlayer[3].y;
+			sourceGunPos[2] = modelMatrixPlayer[3].z;
+			alSourcefv(source[1], AL_POSITION, sourceGunPos);
 			currTimeShoot = glfwGetTime();
 			deltaTimeShoot += currTimeShoot - lastTimeShoot;
 			lastTimeShoot = currTimeShoot;
@@ -1700,19 +1690,80 @@ bool processInput(bool continueApplication) {
 	return continueApplication;
 }
 
-void stateZombie1(int zN) {
+void stateZombieGeneral(int zN) {
 	//zN zombieNumber
 	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
+	float zombieSpeed[7] = {1,1,1,1,1,1,1};
 	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie1 = 1;
+		switch (zN) {
+		case 0: animationIndexZombie1 = 1;
+			break;
+		case 1: animationIndexZombie2 = 1;
+			break;
+		case 2: animationIndexZombie3 = 1;
+			break;
+		case 3: animationIndexZombie4 = 1;
+			break;
+		case 4: animationIndexZombie5 = 1;
+			break;
+		case 5: animationIndexZombie6 = 1;
+			break;
+		case 6: animationIndexZombie7 = 1;
+			break;
+		}
+
 		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
+			zombieSpeed[zN] = 1;
 		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
+			zombieSpeed[zN] = 1.5;
 		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0.1f * zombieSpeed));
+			zombieSpeed[zN] = 2.5;
+		if (zombieLife[zN] == 0) {
+			switch (zN) {
+			case 1:
+				modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0));
+				break;
+			case 2: 
+				modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(0, 0, 0));
+				break;
+			case 3: 
+				modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(0, 0, 0));
+				break;
+			case 4: 
+				modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(0, 0, 0));
+				break;
+			case 5: 
+				modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(0, 0, 0));
+				break;
+			case 6: 
+				modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(0, 0, 0));
+				break;
+			case 7: 
+				modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(0, 0, 0));
+				break;
+			}
+
+
+		}
+		else {
+			switch (zN) {
+			case 0: modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 1: modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(-0.1f * zombieSpeed[zN], 0, 0));
+				break;
+			case 2: modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(0, 0, -0.1f * zombieSpeed[zN]));
+				break;
+			case 3: modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 4: modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(-0.1f * zombieSpeed[zN], 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 5: modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 6: modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			}
+		}
+			
 	}
 
 	//Animacion si el zombie ha sido disparado
@@ -1722,7 +1773,22 @@ void stateZombie1(int zN) {
 		lastTimeShooted = currTimeShooted;
 		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
 		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie1 = 4;
+			switch (zN) {
+			case 0: animationIndexZombie1 = 4;
+				break;
+			case 1: animationIndexZombie2 = 4;
+				break;
+			case 2: animationIndexZombie3 = 4;
+				break;
+			case 3: animationIndexZombie4 = 4;
+				break;
+			case 4: animationIndexZombie5 = 4;
+				break;
+			case 5: animationIndexZombie6 = 4;
+				break;
+			case 6: animationIndexZombie7 = 4;
+				break;
+			}
 		}
 		else {
 			isZombieShooted[zN] = false;
@@ -1741,11 +1807,28 @@ void stateZombie1(int zN) {
 
 	//Animacion si zombie ya no tiene vida
 	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
+		zombieSpeed[zN] = 0;
+
 		currTimeDying = glfwGetTime();
 		deltaTimeDying += currTimeDying - lastTimeDying;
 		lastTimeDying = currTimeDying;
 		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie1 = 2;
+			switch (zN) {
+			case 0: animationIndexZombie1 = 2;
+				break;
+			case 1: animationIndexZombie2 = 2;
+				break;
+			case 2: animationIndexZombie3 = 2;
+				break;
+			case 3: animationIndexZombie4 = 2;
+				break;
+			case 4: animationIndexZombie5 = 2;
+				break;
+			case 5: animationIndexZombie6 = 2;
+				break;
+			case 6: animationIndexZombie7 = 2;
+				break;
+			}
 		}
 		else {
 			isZombieDying[zN] = false;
@@ -1753,358 +1836,41 @@ void stateZombie1(int zN) {
 			currTimeDying = glfwGetTime();
 			deltaTimeDying = 0;
 			lastTimeDying = glfwGetTime();
-			animationIndexZombie1 = 6;
-		}
-	}
-}
 
-void stateZombie2(int zN){
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie2 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(-0.1f * zombieSpeed, 0, 0));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie2 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
+			switch (zN) {
+			case 0: animationIndexZombie1 = 6;
+				std::cout << "Zombie1 eliminated" << std::endl;
+				collidersOBB.erase("Zombie1");
+				break;
+			case 1: animationIndexZombie2 = 6;
+				std::cout << "Zombie2 eliminated" << std::endl;
+				collidersOBB.erase("Zombie2");
+				break;
+			case 2: animationIndexZombie3 = 6;
+				std::cout << "Zombie3 eliminated" << std::endl;
+				collidersOBB.erase("Zombie3");
+				break;
+			case 3: animationIndexZombie4 = 6;
+				std::cout << "Zombie4 eliminated" << std::endl;
+				collidersOBB.erase("Zombie4");
+				break;
+			case 4: animationIndexZombie5 = 6;
+				std::cout << "Zombie5 eliminated" << std::endl;
+				collidersOBB.erase("Zombie5");
+				break;
+			case 5: animationIndexZombie6 = 6;
+				std::cout << "Zombie6 eliminated" << std::endl;
+				collidersOBB.erase("Zombie6");
+				break;
+			case 6: animationIndexZombie7 = 6;
+				std::cout << "Zombie7 eliminated" << std::endl;
+				collidersOBB.erase("Zombie7");
+				break;
 			}
 		}
 	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie2 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie2 = 6;
-		}
-	}
 }
 
-void stateZombie3(int zN) {
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie3 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(0, 0, -0.1f * zombieSpeed));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie3 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
-			}
-		}
-	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie3 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie3 = 6;
-		}
-	}
-}
-
-void stateZombie4(int zN) {
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie4 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(0, 0, 0.1f * zombieSpeed));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie4 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
-			}
-		}
-	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie4 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie4 = 6;
-		}
-	}
-}
-
-void stateZombie5(int zN) {
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie5 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(-0.1f * zombieSpeed, 0, 0.1f * zombieSpeed));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie5 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
-			}
-		}
-	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie5 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie5 = 6;
-		}
-	}
-}
-
-void stateZombie6(int zN) {
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie6 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(0, 0, 0.1f * zombieSpeed));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie6 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
-			}
-		}
-	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie6 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie6 = 6;
-		}
-	}
-}
-
-void stateZombie7(int zN) {
-	//zN zombieNumber
-	//Caminar si rayo colisiona con player
-	float zombieSpeed = 1;
-	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
-		animationIndexZombie7 = 1;
-		if (zombieLife[zN] == 3)
-			zombieSpeed = 1;
-		else if (zombieLife[zN] == 2)
-			zombieSpeed = 1.5;
-		else
-			zombieSpeed = 2.5;
-		modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(0, 0, 0.1f * zombieSpeed));
-	}
-
-	//Animacion si el zombie ha sido disparado
-	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
-		currTimeShooted = glfwGetTime();
-		deltaTimeShooted += currTimeShooted - lastTimeShooted;
-		lastTimeShooted = currTimeShooted;
-		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
-		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
-			animationIndexZombie7 = 4;
-		}
-		else {
-			isZombieShooted[zN] = false;
-			zombieLife[zN]--;
-			currTimeShooted = glfwGetTime();
-			lastTimeShooted = glfwGetTime();
-			deltaTimeShooted = 0;
-			if (zombieLife[zN] <= 0) {
-				currTimeDying = glfwGetTime();
-				deltaTimeDying = 0;
-				lastTimeDying = glfwGetTime();
-				isZombieDying[zN] = true;
-			}
-		}
-	}
-
-	//Animacion si zombie ya no tiene vida
-	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
-		currTimeDying = glfwGetTime();
-		deltaTimeDying += currTimeDying - lastTimeDying;
-		lastTimeDying = currTimeDying;
-		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
-			animationIndexZombie7 = 2;
-		}
-		else {
-			isZombieDying[zN] = false;
-			isZombieAlive[zN] = false;
-			currTimeDying = glfwGetTime();
-			deltaTimeDying = 0;
-			lastTimeDying = glfwGetTime();
-			animationIndexZombie7 = 6;
-		}
-	}
-}
 
 void applicationLoop() {
 	bool psi = true;
@@ -2162,7 +1928,7 @@ void applicationLoop() {
 	modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(20.48f, 0.0f, -92.16f));
 	modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(89.07f, 0.0f, -92.9f));
 
-	//Keys
+	//Keys random location of 5
 	keySlotSelected = dist5(rng);
 	switch (keySlotSelected) {
 	case 1:
@@ -2677,94 +2443,90 @@ void applicationLoop() {
 		//Z1
 		AbstractModel::OBB zombieCollider1;
 		glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
-		zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
-		modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
-		if(isZombieAlive[0])
+		if (isZombieAlive[0]) {
+			zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
+			modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
 			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
-		else
-			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, glm::vec3(0, -150.0f, 0));
-		zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
-		zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+			zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
+			zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+		}
 
 		//Z2
 		AbstractModel::OBB zombieCollider2;
 		glm::mat4 modelMatrixColliderZombie2 = glm::mat4(modelMatrixZombie2);
-		zombieCollider2.u = glm::quat_cast(modelMatrixZombie2);
-		modelMatrixColliderZombie2 = glm::scale(modelMatrixColliderZombie2, scaleZombie);
-		if (isZombieAlive[1])
+
+		if (isZombieAlive[1]) {
+			zombieCollider2.u = glm::quat_cast(modelMatrixZombie2);
+			modelMatrixColliderZombie2 = glm::scale(modelMatrixColliderZombie2, scaleZombie);
 			modelMatrixColliderZombie2 = glm::translate(modelMatrixColliderZombie2, zombieModelAnimate2.getObb().c);
-		else
-			modelMatrixColliderZombie2 = glm::translate(modelMatrixColliderZombie2, glm::vec3(0, -150.0f, 0));
-		zombieCollider2.c = glm::vec3(modelMatrixColliderZombie2[3]);
-		zombieCollider2.e = zombieModelAnimate2.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie2", zombieCollider2, modelMatrixZombie2);
+			zombieCollider2.c = glm::vec3(modelMatrixColliderZombie2[3]);
+			zombieCollider2.e = zombieModelAnimate2.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie2", zombieCollider2, modelMatrixZombie2);
+		}
 
 		//Z3
 		AbstractModel::OBB zombieCollider3;
 		glm::mat4 modelMatrixColliderZombie3 = glm::mat4(modelMatrixZombie3);
-		zombieCollider3.u = glm::quat_cast(modelMatrixZombie3);
-		modelMatrixColliderZombie3 = glm::scale(modelMatrixColliderZombie3, scaleZombie);
-		if (isZombieAlive[2])
+
+		if (isZombieAlive[2]) {
+			zombieCollider3.u = glm::quat_cast(modelMatrixZombie3);
+			modelMatrixColliderZombie3 = glm::scale(modelMatrixColliderZombie3, scaleZombie);
 			modelMatrixColliderZombie3 = glm::translate(modelMatrixColliderZombie3, zombieModelAnimate3.getObb().c);
-		else
-			modelMatrixColliderZombie3 = glm::translate(modelMatrixColliderZombie3, glm::vec3(0, -150.0f, 0));
-		zombieCollider3.c = glm::vec3(modelMatrixColliderZombie3[3]);
-		zombieCollider3.e = zombieModelAnimate3.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie3", zombieCollider3, modelMatrixZombie3);
+			zombieCollider3.c = glm::vec3(modelMatrixColliderZombie3[3]);
+			zombieCollider3.e = zombieModelAnimate3.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie3", zombieCollider3, modelMatrixZombie3);
+		}
 
 		//Z4
 		AbstractModel::OBB zombieCollider4;
 		glm::mat4 modelMatrixColliderZombie4 = glm::mat4(modelMatrixZombie4);
-		zombieCollider4.u = glm::quat_cast(modelMatrixZombie4);
-		modelMatrixColliderZombie4 = glm::scale(modelMatrixColliderZombie4, scaleZombie);
-		if (isZombieAlive[3])
+
+		if (isZombieAlive[3]) {
+			zombieCollider4.u = glm::quat_cast(modelMatrixZombie4);
+			modelMatrixColliderZombie4 = glm::scale(modelMatrixColliderZombie4, scaleZombie);
 			modelMatrixColliderZombie4 = glm::translate(modelMatrixColliderZombie4, zombieModelAnimate4.getObb().c);
-		else
-			modelMatrixColliderZombie4 = glm::translate(modelMatrixColliderZombie4, glm::vec3(0, -150.0f, 0));
-		zombieCollider4.c = glm::vec3(modelMatrixColliderZombie4[3]);
-		zombieCollider4.e = zombieModelAnimate4.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie4", zombieCollider4, modelMatrixZombie4);
+			zombieCollider4.c = glm::vec3(modelMatrixColliderZombie4[3]);
+			zombieCollider4.e = zombieModelAnimate4.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie4", zombieCollider4, modelMatrixZombie4);
+		}
 
 
 		//Z5
 		AbstractModel::OBB zombieCollider5;
 		glm::mat4 modelMatrixColliderZombie5 = glm::mat4(modelMatrixZombie5);
-		zombieCollider5.u = glm::quat_cast(modelMatrixZombie5);
-		modelMatrixColliderZombie5 = glm::scale(modelMatrixColliderZombie5, scaleZombie);
-		if (isZombieAlive[4])
+		if (isZombieAlive[4]) {
+			zombieCollider5.u = glm::quat_cast(modelMatrixZombie5);
+			modelMatrixColliderZombie5 = glm::scale(modelMatrixColliderZombie5, scaleZombie);
 			modelMatrixColliderZombie5 = glm::translate(modelMatrixColliderZombie5, zombieModelAnimate5.getObb().c);
-		else
-			modelMatrixColliderZombie5 = glm::translate(modelMatrixColliderZombie5, glm::vec3(0, -150.0f, 0));
-		zombieCollider5.c = glm::vec3(modelMatrixColliderZombie5[3]);
-		zombieCollider5.e = zombieModelAnimate5.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie5", zombieCollider5, modelMatrixZombie5);
+			zombieCollider5.c = glm::vec3(modelMatrixColliderZombie5[3]);
+			zombieCollider5.e = zombieModelAnimate5.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie5", zombieCollider5, modelMatrixZombie5);
+		}
 
 		//Z6
 		AbstractModel::OBB zombieCollider6;
 		glm::mat4 modelMatrixColliderZombie6 = glm::mat4(modelMatrixZombie6);
-		zombieCollider6.u = glm::quat_cast(modelMatrixZombie6);
-		modelMatrixColliderZombie6 = glm::scale(modelMatrixColliderZombie6, scaleZombie);
-		if (isZombieAlive[5])
+		if (isZombieAlive[5]) {
+			zombieCollider6.u = glm::quat_cast(modelMatrixZombie6);
+			modelMatrixColliderZombie6 = glm::scale(modelMatrixColliderZombie6, scaleZombie);
 			modelMatrixColliderZombie6 = glm::translate(modelMatrixColliderZombie6, zombieModelAnimate6.getObb().c);
-		else
-			modelMatrixColliderZombie6 = glm::translate(modelMatrixColliderZombie6, glm::vec3(0, -150.0f, 0));
-		zombieCollider6.c = glm::vec3(modelMatrixColliderZombie6[3]);
-		zombieCollider6.e = zombieModelAnimate6.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie6", zombieCollider6, modelMatrixZombie6);
+			zombieCollider6.c = glm::vec3(modelMatrixColliderZombie6[3]);
+			zombieCollider6.e = zombieModelAnimate6.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie6", zombieCollider6, modelMatrixZombie6);
+		}
 
 		//Z7
 		AbstractModel::OBB zombieCollider7;
 		glm::mat4 modelMatrixColliderZombie7 = glm::mat4(modelMatrixZombie7);
-		zombieCollider7.u = glm::quat_cast(modelMatrixZombie7);
-		modelMatrixColliderZombie7 = glm::scale(modelMatrixColliderZombie7, scaleZombie);
-		if (isZombieAlive[6])
+		if (isZombieAlive[6]) {
+			zombieCollider7.u = glm::quat_cast(modelMatrixZombie7);
+			modelMatrixColliderZombie7 = glm::scale(modelMatrixColliderZombie7, scaleZombie);
 			modelMatrixColliderZombie7 = glm::translate(modelMatrixColliderZombie7, zombieModelAnimate7.getObb().c);
-		else
-			modelMatrixColliderZombie7 = glm::translate(modelMatrixColliderZombie7, glm::vec3(0, -150.0f, 0));
-		zombieCollider7.c = glm::vec3(modelMatrixColliderZombie7[3]);
-		zombieCollider7.e = zombieModelAnimate7.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie7", zombieCollider7, modelMatrixZombie7);
+			zombieCollider7.c = glm::vec3(modelMatrixColliderZombie7[3]);
+			zombieCollider7.e = zombieModelAnimate7.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie7", zombieCollider7, modelMatrixZombie7);
+		}
 				
 		//Keys
 		AbstractModel::OBB keyColliderA;
@@ -2773,11 +2535,12 @@ void applicationLoop() {
 		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
 		if(isKeyCollected[0] == false)
 			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, keyModelAnimateA.getObb().c);
-		else
-			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, glm::vec3(0.0f, -1050.0f, 0.0f));
+		//else
+			//modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, glm::vec3(0.0f, -1050.0f, 0.0f));
 		keyColliderA.c = glm::vec3(modelMatrixColliderKeyA[3]);
 		keyColliderA.e = keyModelAnimateA.getObb().e * scaleKey * glm::vec3(100.0f);
-		addOrUpdateColliders(collidersOBB, "KeyA", keyColliderA, modelMatrixKeyA);
+		if(isKeyCollected[0]==false)
+			addOrUpdateColliders(collidersOBB, "KeyA", keyColliderA, modelMatrixKeyA);
 
 		AbstractModel::OBB keyColliderB;
 		glm::mat4 modelMatrixColliderKeyB = glm::mat4(modelMatrixKeyB);
@@ -2785,11 +2548,12 @@ void applicationLoop() {
 		modelMatrixColliderKeyB = glm::scale(modelMatrixColliderKeyB, scaleKey);
 		if(isKeyCollected[1] == false)
 			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, keyModelAnimateB.getObb().c);
-		else
-			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, glm::vec3(0.0f, -1050.0f, 0.0f));
+		//else
+			//modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, glm::vec3(0.0f, -1050.0f, 0.0f));
 		keyColliderB.c = glm::vec3(modelMatrixColliderKeyB[3]);
 		keyColliderB.e = keyModelAnimateB.getObb().e * scaleKey * glm::vec3(100.0f);
-		addOrUpdateColliders(collidersOBB, "KeyB", keyColliderB, modelMatrixKeyB);
+		if(isKeyCollected[0]==false)
+			addOrUpdateColliders(collidersOBB, "KeyB", keyColliderB, modelMatrixKeyB);
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
@@ -2842,10 +2606,12 @@ void applicationLoop() {
 						if (jt->first.compare("KeyA") == 0) {
 							isKeyCollected[0] = true;
 							keysFound++;
+							collidersOBB.erase("KeyA");
 						}
 						if (jt->first.compare("KeyB") == 0) {
 							isKeyCollected[1] = true;
 							keysFound++;
+							collidersOBB.erase("KeyB");
 						}
 
 						if (jt->first.compare("Zombie1") == 0 || jt->first.compare("Zombie2") == 0 || jt->first.compare("Zombie3") == 0 || jt->first.compare("Zombie4") == 0 || jt->first.compare("Zombie5") == 0 || jt->first.compare("Zombie6") == 0 || jt->first.compare("Zombie7") == 0) {
@@ -3065,7 +2831,7 @@ void applicationLoop() {
 		}
 //{  0		1		2	  3     4     5     6     7     8     9      10     11      12     13     14     15     16     17    18 };
 //{ fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
-		for (int i = 0; i < 7; i++) {
+		for (int i = 0; i <= 6; i++) {
 			if (isZombieAlive[i]) {
 				sourcesPlay[i + 2] = true;
 				sourcesPlay[i + 9] = false;
@@ -3076,24 +2842,25 @@ void applicationLoop() {
 			}
 		}
 
-		for (int i = 0; i < 2; i++) {
-			if (isKeyCollected[i]) {
-				sourcesPlay[i + 16] = true;
-			}
-			else {
-				sourcesPlay[i + 16] = false;
-			}
-		}
+		if (isKeyCollected[0])
+			sourcesPlay[16] = true;
+		else
+			sourcesPlay[16] = false;
+		if (isKeyCollected[1])
+			sourcesPlay[17] = true;
+		else
+			sourcesPlay[17] = false;
+
 		/*******************************************
 		 * State machines
 		 *******************************************/
-		stateZombie1(0);
-		stateZombie2(1);
-		stateZombie3(2);
-		stateZombie4(3);
-		stateZombie5(4);
-		stateZombie6(5);
-		stateZombie7(6);
+		stateZombieGeneral(0);
+		stateZombieGeneral(1);
+		stateZombieGeneral(2);
+		stateZombieGeneral(3);
+		stateZombieGeneral(4);
+		stateZombieGeneral(5);
+		stateZombieGeneral(6);
 
 		/*******************************************
 		 * Text Rendering
@@ -3509,11 +3276,7 @@ void renderScene(bool renderParticles) {
 	/****************************+
 	* Open AL sound data
 	*/
-	//Gunshot
-	sourceGunPos[0] = modelMatrixPlayer[3].x;
-	sourceGunPos[1] = modelMatrixPlayer[3].y;
-	sourceGunPos[2] = modelMatrixPlayer[3].z;
-	alSourcefv(source[1], AL_POSITION, sourceGunPos);
+
 	//ZombieNormal 1
 	sourceZ1NPos[0] = modelMatrixZombie1[3].x;
 	sourceZ1NPos[1] = modelMatrixZombie1[3].y;
