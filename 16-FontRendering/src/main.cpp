@@ -152,6 +152,7 @@ GLuint skyboxTextureID;
 
 // Modelo para el redener de texto
 FontTypeRendering::FontTypeRendering *modelText;
+FontTypeRendering::FontTypeRendering *modelText2;
 
 GLenum types[6] = {
 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -279,6 +280,9 @@ bool isZombieDying[7] = { false, false, false, false, false, false, false };
 bool isZombieAlive[7] = { true, true, true, true, true, true, true };
 bool isZombieInRange[7] = { false, false, false, false, false, false, false };
 
+//Player Variables
+int vidasPlayer = 3;
+
 
 //Keys Locations
 glm::vec3 KeyAPos = glm::vec3(46.96f , 2.0f, -77.36f);
@@ -289,6 +293,7 @@ glm::vec3 KeyEPos = glm::vec3(-23.52f, 2.0f,  39.84f);
 int keySlotSelected = 0;
 int keySlotSelectedB = 0;
 bool isKeyCollected[2] = { false, false };
+int keysFound = 0;
 
 //Rays
 glm::vec3 rayShootDirection;
@@ -322,25 +327,83 @@ GLuint depthMap, depthMapFBO;
 
 /**********************
  * OpenAL config
+ * Sources:
+ * 0	-	Fire
+ * 1	-	Gunshot
+ * 2	-	ZombieNormal
+ * 3	-	ZombieDying
+ * 4	-	Collect Key
+ * 5	-	Player Walk
  */
 
 // OpenAL Defines
-#define NUM_BUFFERS 3
-#define NUM_SOURCES 3
+#define NUM_BUFFERS 6
+#define NUM_SOURCES 19
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source 0
+// Source 0 - Fire
 ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
 ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
-// Source 1
-ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
-// Source 2
-ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+// Source 1 - Gunshot
+ALfloat sourceGunPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceGunVel[] = { 0.0, 0.0, 0.0 };
+
+// Source 2 - Zombie 1
+ALfloat sourceZ1NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ1NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 2
+ALfloat sourceZ2NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ2NVel[] = { 0.0, 0.0,0.0 };
+// Source 4 - Zombie 3
+ALfloat sourceZ3NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ3NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 4
+ALfloat sourceZ4NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ4NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 5
+ALfloat sourceZ5NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ5NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 6
+ALfloat sourceZ6NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ6NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 7
+ALfloat sourceZ7NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ7NVel[] = { 0.0, 0.0,0.0 };
+
+//Source ZombieDie - Zombie 1
+ALfloat sourceZ1DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ1DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 2
+ALfloat sourceZ2DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ2DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 3
+ALfloat sourceZ3DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ3DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 4
+ALfloat sourceZ4DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ4DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 5
+ALfloat sourceZ5DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ5DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 6
+ALfloat sourceZ6DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ6DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 7
+ALfloat sourceZ7DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ7DVel[] = { 0.0, 0.0,0.0 };
+
+// Source Collect Key A
+ALfloat sourceKeyAPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceKeyAVel[] = { 0.0, 0.0, 0.0 };
+// Source Collect Key B
+ALfloat sourceKeyBPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceKeyBVel[] = { 0.0, 0.0, 0.0 };
+// Source Walk
+ALfloat sourceWalkPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceWalkVel[] = { 0.0, 0.0, 0.0 };
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
@@ -351,7 +414,9 @@ ALenum format;
 ALvoid *data;
 int ch;
 ALboolean loop;
-std::vector<bool> sourcesPlay = { true, true, true };
+//std::vector<bool> sourcesPlay = {  0		1		2	  3     4     5     6     7     8     9      10     11      12     13     14     15     16     17    18 };
+//std::vector<bool> sourcesPlay = { fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
+std::vector<bool> sourcesPlay = { true,   false,   true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false };
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
@@ -377,7 +442,257 @@ void stateZombie4(int zN);
 void stateZombie5(int zN);
 void stateZombie6(int zN);
 void stateZombie7(int zN);
+void configAudioListeners();
+void openALSoundData();
 
+
+void openALSoundData() {
+	/*source0Pos[0] = modelMatrixFountain[3].x;
+	source0Pos[1] = modelMatrixFountain[3].y;
+	source0Pos[2] = modelMatrixFountain[3].z;
+	alSourcefv(source[0], AL_POSITION, source0Pos);*/
+	
+	
+
+	
+	// Listener for the Third person camera
+	listenerPos[0] = modelMatrixPlayer[3].x;
+	listenerPos[1] = modelMatrixPlayer[3].y;
+	listenerPos[2] = modelMatrixPlayer[3].z;
+	alListenerfv(AL_POSITION, listenerPos);
+
+	glm::vec3 upModel = glm::normalize(modelMatrixPlayer[1]);
+	glm::vec3 frontModel = glm::normalize(modelMatrixPlayer[2]);
+
+	listenerOri[0] = frontModel.x;
+	listenerOri[1] = frontModel.y;
+	listenerOri[2] = frontModel.z;
+	listenerOri[3] = upModel.x;
+	listenerOri[4] = upModel.y;
+	listenerOri[5] = upModel.z;
+
+	// Listener for the First person camera
+	/*listenerPos[0] = camera->getPosition().x;
+	 listenerPos[1] = camera->getPosition().y;
+	 listenerPos[2] = camera->getPosition().z;
+	 alListenerfv(AL_POSITION, listenerPos);
+	 listenerOri[0] = camera->getFront().x;
+	 listenerOri[1] = camera->getFront().y;
+	 listenerOri[2] = camera->getFront().z;
+	 listenerOri[3] = camera->getUp().x;
+	 listenerOri[4] = camera->getUp().y;
+	 listenerOri[5] = camera->getUp().z;*/
+	alListenerfv(AL_ORIENTATION, listenerOri);
+
+	for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
+		if (sourcesPlay[i]) {
+			sourcesPlay[i] = false;
+			alSourcePlay(source[i]);
+		}
+	}
+}
+
+void configAudioListeners() {
+	alutInit(0, nullptr);
+	alListenerfv(AL_POSITION, listenerPos);
+	alListenerfv(AL_VELOCITY, listenerVel);
+	alListenerfv(AL_ORIENTATION, listenerOri);
+	alGetError(); // clear any error messages
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating buffers !!\n");
+		exit(1);
+	}
+	else {
+		printf("init() - No errors yet.");
+	}
+	// Config source 0
+	/* Sources:
+		* 0 - Fire
+		* 1 - Gunshot
+		* 2 - ZombieNormal
+		* 3 - ZombieDying
+		* 4 - Collect Key
+		* 5 - Player Walk
+	*/
+	// Generate buffers, or else no sound will happen!
+	alGenBuffers(NUM_BUFFERS, buffer);
+	buffer[0] = alutCreateBufferFromFile("../sounds/fire.wav");
+	//buffer[1] = alutCreateBufferFromFile("../sounds/fountain.wav");
+	buffer[1] = alutCreateBufferFromFile("../sounds/P226-9mm-Close-Single-Gunshot-C.wav");
+	buffer[2] = alutCreateBufferFromFile("../sounds/Zombie-Long-Attack-A5.wav");
+	buffer[3] = alutCreateBufferFromFile("../sounds/Zombie-Dying-and-Choking-A1.wav");
+	buffer[4] = alutCreateBufferFromFile("../sounds/Fast-Collection-of-coins.wav");
+	buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-slow-pace-1.wav");
+	int errorAlut = alutGetError();
+	if (errorAlut != ALUT_ERROR_NO_ERROR) {
+		printf("- Error open files with alut %d !!\n", errorAlut);
+		exit(2);
+	}
+
+	alGetError(); /* clear error */
+	alGenSources(NUM_SOURCES, source);
+
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating sources !!\n");
+		exit(2);
+	}
+	else {
+		printf("init - no errors after alGenSources\n");
+	}
+	//Fire
+	alSourcef(source[0], AL_PITCH, 1.0f);
+	alSourcef(source[0], AL_GAIN, 3.0f);
+	alSourcefv(source[0], AL_POSITION, source0Pos);
+	alSourcefv(source[0], AL_VELOCITY, source0Vel);
+	alSourcei(source[0], AL_BUFFER, buffer[0]);
+	alSourcei(source[0], AL_LOOPING, AL_TRUE);
+	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
+	//Gunshot
+	alSourcef(source[1], AL_PITCH, 1.0f);
+	alSourcef(source[1], AL_GAIN, 3.0f);
+	alSourcefv(source[1], AL_POSITION, sourceGunPos);
+	alSourcefv(source[1], AL_VELOCITY, sourceGunVel);
+	alSourcei(source[1], AL_BUFFER, buffer[1]);
+	alSourcei(source[1], AL_LOOPING, AL_FALSE);
+	alSourcef(source[1], AL_MAX_DISTANCE, 200);
+
+	//ZombieNormal - 1
+	alSourcef(source[2], AL_PITCH, 1.0f);
+	alSourcef(source[2], AL_GAIN, 0.3f);
+	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
+	alSourcefv(source[2], AL_VELOCITY, sourceZ1NVel);
+	alSourcei(source[2], AL_BUFFER, buffer[2]);
+	alSourcei(source[2], AL_LOOPING, AL_TRUE);
+	alSourcef(source[2], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 2
+	alSourcef(source[3], AL_PITCH, 1.0f);
+	alSourcef(source[3], AL_GAIN, 0.3f);
+	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
+	alSourcefv(source[3], AL_VELOCITY, sourceZ2NVel);
+	alSourcei(source[3], AL_BUFFER, buffer[2]);
+	alSourcei(source[3], AL_LOOPING, AL_TRUE);
+	alSourcef(source[3], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 3
+	alSourcef(source[4], AL_PITCH, 1.0f);
+	alSourcef(source[4], AL_GAIN, 0.3f);
+	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
+	alSourcefv(source[4], AL_VELOCITY, sourceZ3NVel);
+	alSourcei(source[4], AL_BUFFER, buffer[2]);
+	alSourcei(source[4], AL_LOOPING, AL_TRUE);
+	alSourcef(source[4], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 4
+	alSourcef(source[5], AL_PITCH, 1.0f);
+	alSourcef(source[5], AL_GAIN, 0.3f);
+	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
+	alSourcefv(source[5], AL_VELOCITY, sourceZ4NVel);
+	alSourcei(source[5], AL_BUFFER, buffer[2]);
+	alSourcei(source[5], AL_LOOPING, AL_TRUE);
+	alSourcef(source[5], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 5
+	alSourcef(source[6], AL_PITCH, 1.0f);
+	alSourcef(source[6], AL_GAIN, 0.3f);
+	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
+	alSourcefv(source[6], AL_VELOCITY, sourceZ5NVel);
+	alSourcei(source[6], AL_BUFFER, buffer[2]);
+	alSourcei(source[6], AL_LOOPING, AL_TRUE);
+	alSourcef(source[6], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 6
+	alSourcef(source[7], AL_PITCH, 1.0f);
+	alSourcef(source[7], AL_GAIN, 0.3f);
+	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
+	alSourcefv(source[7], AL_VELOCITY, sourceZ6NVel);
+	alSourcei(source[7], AL_BUFFER, buffer[2]);
+	alSourcei(source[7], AL_LOOPING, AL_TRUE);
+	alSourcef(source[7], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 7
+	alSourcef(source[8], AL_PITCH, 1.0f);
+	alSourcef(source[8], AL_GAIN, 0.3f);
+	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
+	alSourcefv(source[8], AL_VELOCITY, sourceZ7NVel);
+	alSourcei(source[8], AL_BUFFER, buffer[2]);
+	alSourcei(source[8], AL_LOOPING, AL_TRUE);
+	alSourcef(source[8], AL_MAX_DISTANCE, 1000);
+	//ZombieDie - 1
+	alSourcef(source[9], AL_PITCH, 1.0f);
+	alSourcef(source[9], AL_GAIN, 0.3f);
+	alSourcefv(source[9], AL_POSITION, sourceZ1DPos);
+	alSourcefv(source[9], AL_VELOCITY, sourceZ1DVel);
+	alSourcei(source[9], AL_BUFFER, buffer[3]);
+	alSourcei(source[9], AL_LOOPING, AL_FALSE);
+	alSourcef(source[9], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 2
+	alSourcef(source[10], AL_PITCH, 1.0f);
+	alSourcef(source[10], AL_GAIN, 0.3f);
+	alSourcefv(source[10], AL_POSITION, sourceZ2DPos);
+	alSourcefv(source[10], AL_VELOCITY, sourceZ2DVel);
+	alSourcei(source[10], AL_BUFFER, buffer[3]);
+	alSourcei(source[10], AL_LOOPING, AL_FALSE);
+	alSourcef(source[10], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 3
+	alSourcef(source[11], AL_PITCH, 1.0f);
+	alSourcef(source[11], AL_GAIN, 0.3f);
+	alSourcefv(source[11], AL_POSITION, sourceZ3DPos);
+	alSourcefv(source[11], AL_VELOCITY, sourceZ3DVel);
+	alSourcei(source[11], AL_BUFFER, buffer[3]);
+	alSourcei(source[11], AL_LOOPING, AL_FALSE);
+	alSourcef(source[11], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 4
+	alSourcef(source[12], AL_PITCH, 1.0f);
+	alSourcef(source[12], AL_GAIN, 0.3f);
+	alSourcefv(source[12], AL_POSITION, sourceZ4DPos);
+	alSourcefv(source[12], AL_VELOCITY, sourceZ4DVel);
+	alSourcei(source[12], AL_BUFFER, buffer[3]);
+	alSourcei(source[12], AL_LOOPING, AL_FALSE);
+	alSourcef(source[12], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 5
+	alSourcef(source[13], AL_PITCH, 1.0f);
+	alSourcef(source[13], AL_GAIN, 0.3f);
+	alSourcefv(source[13], AL_POSITION, sourceZ5DPos);
+	alSourcefv(source[13], AL_VELOCITY, sourceZ5DVel);
+	alSourcei(source[13], AL_BUFFER, buffer[3]);
+	alSourcei(source[13], AL_LOOPING, AL_FALSE);
+	alSourcef(source[13], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 6
+	alSourcef(source[14], AL_PITCH, 1.0f);
+	alSourcef(source[14], AL_GAIN, 0.3f);
+	alSourcefv(source[14], AL_POSITION, sourceZ6DPos);
+	alSourcefv(source[14], AL_VELOCITY, sourceZ6DVel);
+	alSourcei(source[14], AL_BUFFER, buffer[3]);
+	alSourcei(source[14], AL_LOOPING, AL_FALSE);
+	alSourcef(source[14], AL_MAX_DISTANCE, 500);
+	//ZombieDie - 7
+	alSourcef(source[15], AL_PITCH, 1.0f);
+	alSourcef(source[15], AL_GAIN, 0.3f);
+	alSourcefv(source[15], AL_POSITION, sourceZ7DPos);
+	alSourcefv(source[15], AL_VELOCITY, sourceZ7DVel);
+	alSourcei(source[15], AL_BUFFER, buffer[3]);
+	alSourcei(source[15], AL_LOOPING, AL_FALSE);
+	alSourcef(source[15], AL_MAX_DISTANCE, 500);
+	//Collect Key A
+	alSourcef(source[16], AL_PITCH, 1.0f);
+	alSourcef(source[16], AL_GAIN, 0.3f);
+	alSourcefv(source[16], AL_POSITION, sourceKeyAPos);
+	alSourcefv(source[16], AL_VELOCITY, sourceKeyAVel);
+	alSourcei(source[16], AL_BUFFER, buffer[4]);
+	alSourcei(source[16], AL_LOOPING, AL_FALSE);
+	alSourcef(source[16], AL_MAX_DISTANCE, 500);
+	//Collect Key B
+	alSourcef(source[17], AL_PITCH, 1.0f);
+	alSourcef(source[17], AL_GAIN, 0.3f);
+	alSourcefv(source[17], AL_POSITION, sourceKeyBPos);
+	alSourcefv(source[17], AL_VELOCITY, sourceKeyBVel);
+	alSourcei(source[17], AL_BUFFER, buffer[4]);
+	alSourcei(source[17], AL_LOOPING, AL_FALSE);
+	alSourcef(source[17], AL_MAX_DISTANCE, 500);
+	//Walk
+	alSourcef(source[18], AL_PITCH, 1.0f);
+	alSourcef(source[18], AL_GAIN, 0.3f);
+	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
+	alSourcefv(source[18], AL_VELOCITY, sourceWalkVel);
+	alSourcei(source[18], AL_BUFFER, buffer[5]);
+	alSourcei(source[18], AL_LOOPING, AL_TRUE);
+	alSourcef(source[18], AL_MAX_DISTANCE, 300);
+}
 
 void initParticleBuffers() {
 	// Generate the buffers
@@ -1034,66 +1349,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	/*******************************************
 	 * OpenAL init
 	 *******************************************/
-	alutInit(0, nullptr);
-	alListenerfv(AL_POSITION, listenerPos);
-	alListenerfv(AL_VELOCITY, listenerVel);
-	alListenerfv(AL_ORIENTATION, listenerOri);
-	alGetError(); // clear any error messages
-	if (alGetError() != AL_NO_ERROR) {
-		printf("- Error creating buffers !!\n");
-		exit(1);
-	} else {
-		printf("init() - No errors yet.");
-	}
-	// Config source 0
-	// Generate buffers, or else no sound will happen!
-	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/fountain.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
-	buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
-	int errorAlut = alutGetError();
-	if (errorAlut != ALUT_ERROR_NO_ERROR) {
-		printf("- Error open files with alut %d !!\n", errorAlut);
-		exit(2);
-	}
-
-	alGetError(); /* clear error */
-	alGenSources(NUM_SOURCES, source);
-
-	if (alGetError() != AL_NO_ERROR) {
-		printf("- Error creating sources !!\n");
-		exit(2);
-	} else {
-		printf("init - no errors after alGenSources\n");
-	}
-	alSourcef(source[0], AL_PITCH, 1.0f);
-	alSourcef(source[0], AL_GAIN, 3.0f);
-	alSourcefv(source[0], AL_POSITION, source0Pos);
-	alSourcefv(source[0], AL_VELOCITY, source0Vel);
-	alSourcei(source[0], AL_BUFFER, buffer[0]);
-	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
-
-	alSourcef(source[1], AL_PITCH, 1.0f);
-	alSourcef(source[1], AL_GAIN, 3.0f);
-	alSourcefv(source[1], AL_POSITION, source1Pos);
-	alSourcefv(source[1], AL_VELOCITY, source1Vel);
-	alSourcei(source[1], AL_BUFFER, buffer[1]);
-	alSourcei(source[1], AL_LOOPING, AL_TRUE);
-	alSourcef(source[1], AL_MAX_DISTANCE, 2000);
-
-	alSourcef(source[2], AL_PITCH, 1.0f);
-	alSourcef(source[2], AL_GAIN, 0.3f);
-	alSourcefv(source[2], AL_POSITION, source2Pos);
-	alSourcefv(source[2], AL_VELOCITY, source2Vel);
-	alSourcei(source[2], AL_BUFFER, buffer[2]);
-	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 500);
+	configAudioListeners();
 
 	// Se inicializa el modelo de texeles.
 	modelText = new FontTypeRendering::FontTypeRendering(screenWidth,
 			screenHeight);
 	modelText->Initialize();
+	modelText2 = new FontTypeRendering::FontTypeRendering(screenWidth,
+		screenHeight);
+	modelText2->Initialize();
 }
 
 void destroy() {
@@ -2032,8 +2296,10 @@ void applicationLoop() {
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("fogColor",
 				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+		/*shaderTerrain.setVectorFloat3("fogColor",
+				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));*/
 		shaderTerrain.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.7, 0.7, 0.6)));
 		shaderSkybox.setVectorFloat3("fogColor",
 				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
 
@@ -2505,7 +2771,6 @@ void applicationLoop() {
 		glm::mat4 modelMatrixColliderKeyA = glm::mat4(modelMatrixKeyA);
 		keyColliderA.u = glm::quat_cast(modelMatrixKeyA);
 		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
-		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
 		if(isKeyCollected[0] == false)
 			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, keyModelAnimateA.getObb().c);
 		else
@@ -2576,9 +2841,20 @@ void applicationLoop() {
 					if (it->first.compare("Player") == 0) {
 						if (jt->first.compare("KeyA") == 0) {
 							isKeyCollected[0] = true;
+							keysFound++;
 						}
 						if (jt->first.compare("KeyB") == 0) {
 							isKeyCollected[1] = true;
+							keysFound++;
+						}
+
+						if (jt->first.compare("Zombie1") == 0 || jt->first.compare("Zombie2") == 0 || jt->first.compare("Zombie3") == 0 || jt->first.compare("Zombie4") == 0 || jt->first.compare("Zombie5") == 0 || jt->first.compare("Zombie6") == 0 || jt->first.compare("Zombie7") == 0) {
+							if (vidasPlayer == 3)
+								vidasPlayer = 2;
+							else if (vidasPlayer == 2)
+								vidasPlayer = 1;
+							else
+								vidasPlayer = 0;
 						}
 					}
 				}
@@ -2773,6 +3049,41 @@ void applicationLoop() {
 			animationIndexZombie7 = 0;
 		else if (!isZombieAlive[6])
 			animationIndexZombie7 = 6;
+
+		//Triggers para audio
+		if (animationIndexPlayer == 1) {
+			sourcesPlay[18] = true;
+			sourcesPlay[1] = false;
+		}
+		else if (animationIndexPlayer == 6) {
+			sourcesPlay[18] = false;
+			sourcesPlay[1] = true;
+		}
+		else {
+			sourcesPlay[1] = false;
+			sourcesPlay[2] = false;
+		}
+//{  0		1		2	  3     4     5     6     7     8     9      10     11      12     13     14     15     16     17    18 };
+//{ fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
+		for (int i = 0; i < 7; i++) {
+			if (isZombieAlive[i]) {
+				sourcesPlay[i + 2] = true;
+				sourcesPlay[i + 9] = false;
+			}
+			else {
+				sourcesPlay[i + 2] = false;	//Ya no vive el zombie normal
+				sourcesPlay[i + 9] = true;	//Sonido de muerte de zombie
+			}
+		}
+
+		for (int i = 0; i < 2; i++) {
+			if (isKeyCollected[i]) {
+				sourcesPlay[i + 16] = true;
+			}
+			else {
+				sourcesPlay[i + 16] = false;
+			}
+		}
 		/*******************************************
 		 * State machines
 		 *******************************************/
@@ -2787,8 +3098,10 @@ void applicationLoop() {
 		/*******************************************
 		 * Text Rendering
 		 *******************************************/
-
-		modelText->render("Texto en openGL", -1, 0);
+		std::string keysFoundStr = std::to_string(keysFound);
+		std::string showText = "Llaves encontradas: " + keysFoundStr + " - 2";
+		modelText->render(showText, 0.6, 0.9);
+		modelText2->render("Vida: " + std::to_string(vidasPlayer), -0.5, 0.9);
 		glfwSwapBuffers(window);
 
 		/*******************************************
@@ -2818,51 +3131,7 @@ void applicationLoop() {
 		/*******************************************
 		* OpenAL sound data
 		*******************************************/
-		source0Pos[0] = modelMatrixFountain[3].x;
-		source0Pos[1] = modelMatrixFountain[3].y;
-		source0Pos[2] = modelMatrixFountain[3].z;
-		alSourcefv(source[0], AL_POSITION, source0Pos);
-
-		//eliminate source2Pos[0] = modelMatrixDart[3].x;
-		//eliminate source2Pos[1] = modelMatrixDart[3].y;
-		//eliminate source2Pos[2] = modelMatrixDart[3].z;
-		//eliminate alSourcefv(source[2], AL_POSITION, source2Pos);
-
-		// Listener for the Thris person camera
-		listenerPos[0] = modelMatrixPlayer[3].x;
-		listenerPos[1] = modelMatrixPlayer[3].y;
-		listenerPos[2] = modelMatrixPlayer[3].z;
-		alListenerfv(AL_POSITION, listenerPos);
-
-		glm::vec3 upModel = glm::normalize(modelMatrixPlayer[1]);
-		glm::vec3 frontModel = glm::normalize(modelMatrixPlayer[2]);
-
-		listenerOri[0] = frontModel.x;
-		listenerOri[1] = frontModel.y;
-		listenerOri[2] = frontModel.z;
-		listenerOri[3] = upModel.x;
-		listenerOri[4] = upModel.y;
-		listenerOri[5] = upModel.z;
-
-		// Listener for the First person camera
-		/*listenerPos[0] = camera->getPosition().x;
-		 listenerPos[1] = camera->getPosition().y;
-		 listenerPos[2] = camera->getPosition().z;
-		 alListenerfv(AL_POSITION, listenerPos);
-		 listenerOri[0] = camera->getFront().x;
-		 listenerOri[1] = camera->getFront().y;
-		 listenerOri[2] = camera->getFront().z;
-		 listenerOri[3] = camera->getUp().x;
-		 listenerOri[4] = camera->getUp().y;
-		 listenerOri[5] = camera->getUp().z;*/
-		alListenerfv(AL_ORIENTATION, listenerOri);
-
-		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-			if (sourcesPlay[i]) {
-				sourcesPlay[i] = false;
-				alSourcePlay(source[i]);
-			}
-		}
+		openALSoundData();
 	}
 }
 
@@ -3225,10 +3494,10 @@ void renderScene(bool renderParticles) {
 			/****************************+
 			 * Open AL sound data
 			 */
-			source1Pos[0] = modelFireParticles[3].x;
-			source1Pos[1] = modelFireParticles[3].y;
-			source1Pos[2] = modelFireParticles[3].z;
-			alSourcefv(source[1], AL_POSITION, source1Pos);
+			source0Pos[0] = modelFireParticles[3].x;
+			source0Pos[1] = modelFireParticles[3].y;
+			source0Pos[2] = modelFireParticles[3].z;
+			alSourcefv(source[0], AL_POSITION, source0Pos);
 
 			/**********
 			 * End Render particles systems
@@ -3236,6 +3505,104 @@ void renderScene(bool renderParticles) {
 		}
 
 	}
+
+	/****************************+
+	* Open AL sound data
+	*/
+	//Gunshot
+	sourceGunPos[0] = modelMatrixPlayer[3].x;
+	sourceGunPos[1] = modelMatrixPlayer[3].y;
+	sourceGunPos[2] = modelMatrixPlayer[3].z;
+	alSourcefv(source[1], AL_POSITION, sourceGunPos);
+	//ZombieNormal 1
+	sourceZ1NPos[0] = modelMatrixZombie1[3].x;
+	sourceZ1NPos[1] = modelMatrixZombie1[3].y;
+	sourceZ1NPos[2] = modelMatrixZombie1[3].z;
+	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
+	//ZombieNormal 2
+	sourceZ2NPos[0] = modelMatrixZombie2[3].x;
+	sourceZ2NPos[1] = modelMatrixZombie2[3].y;
+	sourceZ2NPos[2] = modelMatrixZombie2[3].z;
+	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
+	//ZombieNormal 3
+	sourceZ3NPos[0] = modelMatrixZombie3[3].x;
+	sourceZ3NPos[1] = modelMatrixZombie3[3].y;
+	sourceZ3NPos[2] = modelMatrixZombie3[3].z;
+	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
+	//ZombieNormal 4
+	sourceZ4NPos[0] = modelMatrixZombie4[3].x;
+	sourceZ4NPos[1] = modelMatrixZombie4[3].y;
+	sourceZ4NPos[2] = modelMatrixZombie4[3].z;
+	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
+	//ZombieNormal 5
+	sourceZ5NPos[0] = modelMatrixZombie5[3].x;
+	sourceZ5NPos[1] = modelMatrixZombie5[3].y;
+	sourceZ5NPos[2] = modelMatrixZombie5[3].z;
+	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
+	//ZombieNormal 6
+	sourceZ6NPos[0] = modelMatrixZombie6[3].x;
+	sourceZ6NPos[1] = modelMatrixZombie6[3].y;
+	sourceZ6NPos[2] = modelMatrixZombie6[3].z;
+	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
+	//ZombieNormal 7
+	sourceZ7NPos[0] = modelMatrixZombie7[3].x;
+	sourceZ7NPos[1] = modelMatrixZombie7[3].y;
+	sourceZ7NPos[2] = modelMatrixZombie7[3].z;
+	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
+
+	//ZombieDie 1
+	sourceZ1DPos[0] = modelMatrixZombie1[3].x;
+	sourceZ1DPos[1] = modelMatrixZombie1[3].y;
+	sourceZ1DPos[2] = modelMatrixZombie1[3].z;
+	alSourcefv(source[9], AL_POSITION, sourceZ1DPos);
+	//ZombieDie 2
+	sourceZ2DPos[0] = modelMatrixZombie2[3].x;
+	sourceZ2DPos[1] = modelMatrixZombie2[3].y;
+	sourceZ2DPos[2] = modelMatrixZombie2[3].z;
+	alSourcefv(source[10], AL_POSITION, sourceZ2DPos);
+	//ZombieDie 3
+	sourceZ3DPos[0] = modelMatrixZombie3[3].x;
+	sourceZ3DPos[1] = modelMatrixZombie3[3].y;
+	sourceZ3DPos[2] = modelMatrixZombie3[3].z;
+	alSourcefv(source[11], AL_POSITION, sourceZ3DPos);
+	//ZombieDie 4
+	sourceZ4DPos[0] = modelMatrixZombie4[3].x;
+	sourceZ4DPos[1] = modelMatrixZombie4[3].y;
+	sourceZ4DPos[2] = modelMatrixZombie4[3].z;
+	alSourcefv(source[12], AL_POSITION, sourceZ4DPos);
+	//ZombieDie 5
+	sourceZ5DPos[0] = modelMatrixZombie5[3].x;
+	sourceZ5DPos[1] = modelMatrixZombie5[3].y;
+	sourceZ5DPos[2] = modelMatrixZombie5[3].z;
+	alSourcefv(source[13], AL_POSITION, sourceZ5DPos);
+	//ZombieDie 6
+	sourceZ6DPos[0] = modelMatrixZombie6[3].x;
+	sourceZ6DPos[1] = modelMatrixZombie6[3].y;
+	sourceZ6DPos[2] = modelMatrixZombie6[3].z;
+	alSourcefv(source[14], AL_POSITION, sourceZ6DPos);
+	//ZombieDie 7
+	sourceZ7DPos[0] = modelMatrixZombie7[3].x;
+	sourceZ7DPos[1] = modelMatrixZombie7[3].y;
+	sourceZ7DPos[2] = modelMatrixZombie7[3].z;
+	alSourcefv(source[15], AL_POSITION, sourceZ7DPos);
+
+	//CollectKeyA
+	sourceKeyAPos[0] = modelMatrixKeyA[3].x;
+	sourceKeyAPos[1] = modelMatrixKeyA[3].y;
+	sourceKeyAPos[2] = modelMatrixKeyA[3].z;
+	alSourcefv(source[16], AL_POSITION, sourceKeyAPos);
+	//CollectKeyB
+	sourceKeyBPos[0] = modelMatrixKeyB[3].x;
+	sourceKeyBPos[1] = modelMatrixKeyB[3].y;
+	sourceKeyBPos[2] = modelMatrixKeyB[3].z;
+	alSourcefv(source[17], AL_POSITION, sourceKeyBPos);
+
+	//CollectKeyA
+	sourceWalkPos[0] = modelMatrixPlayer[3].x;
+	sourceWalkPos[1] = modelMatrixPlayer[3].y;
+	sourceWalkPos[2] = modelMatrixPlayer[3].z;
+	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
+
 	glEnable(GL_CULL_FACE);
 }
 
