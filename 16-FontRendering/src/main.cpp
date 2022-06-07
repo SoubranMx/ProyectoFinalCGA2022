@@ -672,7 +672,7 @@ void configAudioListeners() {
 	alSourcef(source[17], AL_MAX_DISTANCE, 500);
 	//Walk
 	alSourcef(source[18], AL_PITCH, 1.0f);
-	alSourcef(source[18], AL_GAIN, 0.3f);
+	alSourcef(source[18], AL_GAIN, 0.5f);
 	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
 	alSourcefv(source[18], AL_VELOCITY, sourceWalkVel);
 	alSourcei(source[18], AL_BUFFER, buffer[5]);
@@ -1985,7 +1985,7 @@ void applicationLoop() {
 
 	glm::vec3 lightPos = glm::vec3(10.0, 10.0, 0.0);
 
-	shadowBox = new ShadowBox(-lightPos, camera.get(), 15.0f, 0.1f, 45.0f);
+	shadowBox = new ShadowBox(-lightPos, camera.get(), 100.0f, 0.1f, 60.0f);
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
@@ -2062,13 +2062,13 @@ void applicationLoop() {
 		 * Propiedades de neblina
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.4, 0.4, 0.3)));
 		/*shaderTerrain.setVectorFloat3("fogColor",
 				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));*/
 		shaderTerrain.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.7, 0.7, 0.6)));
+				glm::value_ptr(glm::vec3(0.3, 0.3, 0.2)));
 		shaderSkybox.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.7, 0.7, 0.6)));
 
 		/*******************************************
 		 * Propiedades Luz direccional
@@ -2532,29 +2532,25 @@ void applicationLoop() {
 		//Keys
 		AbstractModel::OBB keyColliderA;
 		glm::mat4 modelMatrixColliderKeyA = glm::mat4(modelMatrixKeyA);
-		keyColliderA.u = glm::quat_cast(modelMatrixKeyA);
-		modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
-		if(isKeyCollected[0] == false)
+		if (isKeyCollected[0] == false) {
+			keyColliderA.u = glm::quat_cast(modelMatrixKeyA);
+			modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
 			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, keyModelAnimateA.getObb().c);
-		//else
-			//modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, glm::vec3(0.0f, -1050.0f, 0.0f));
-		keyColliderA.c = glm::vec3(modelMatrixColliderKeyA[3]);
-		keyColliderA.e = keyModelAnimateA.getObb().e * scaleKey * glm::vec3(100.0f);
-		if(isKeyCollected[0]==false)
+			keyColliderA.c = glm::vec3(modelMatrixColliderKeyA[3]);
+			keyColliderA.e = keyModelAnimateA.getObb().e * scaleKey * glm::vec3(100.0f);
 			addOrUpdateColliders(collidersOBB, "KeyA", keyColliderA, modelMatrixKeyA);
+		}
 
 		AbstractModel::OBB keyColliderB;
 		glm::mat4 modelMatrixColliderKeyB = glm::mat4(modelMatrixKeyB);
-		keyColliderB.u = glm::quat_cast(modelMatrixKeyB);
-		modelMatrixColliderKeyB = glm::scale(modelMatrixColliderKeyB, scaleKey);
-		if(isKeyCollected[1] == false)
+		if (isKeyCollected[1] == false) {
+			keyColliderB.u = glm::quat_cast(modelMatrixKeyB);
+			modelMatrixColliderKeyB = glm::scale(modelMatrixColliderKeyB, scaleKey);
 			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, keyModelAnimateB.getObb().c);
-		//else
-			//modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, glm::vec3(0.0f, -1050.0f, 0.0f));
-		keyColliderB.c = glm::vec3(modelMatrixColliderKeyB[3]);
-		keyColliderB.e = keyModelAnimateB.getObb().e * scaleKey * glm::vec3(100.0f);
-		if(isKeyCollected[0]==false)
+			keyColliderB.c = glm::vec3(modelMatrixColliderKeyB[3]);
+			keyColliderB.e = keyModelAnimateB.getObb().e * scaleKey * glm::vec3(100.0f);
 			addOrUpdateColliders(collidersOBB, "KeyB", keyColliderB, modelMatrixKeyB);
+		}
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
