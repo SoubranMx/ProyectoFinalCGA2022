@@ -507,7 +507,8 @@ void configAudioListeners() {
 	buffer[2] = alutCreateBufferFromFile("../sounds/Zombie-Long-Attack-A5.wav");
 	buffer[3] = alutCreateBufferFromFile("../sounds/Zombie-Dying-and-Choking-A1.wav");
 	buffer[4] = alutCreateBufferFromFile("../sounds/Fast-Collection-of-coins.wav");
-	buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-slow-pace-1.wav");
+	//buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-slow-pace-1.wav");
+	buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-medium-pace-1.wav");
 	int errorAlut = alutGetError();
 	if (errorAlut != ALUT_ERROR_NO_ERROR) {
 		printf("- Error open files with alut %d !!\n", errorAlut);
@@ -547,7 +548,7 @@ void configAudioListeners() {
 	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
 	alSourcefv(source[2], AL_VELOCITY, sourceZ1NVel);
 	alSourcei(source[2], AL_BUFFER, buffer[2]);
-	alSourcei(source[2], AL_LOOPING, AL_TRUE);
+	alSourcei(source[2], AL_LOOPING, AL_FALSE);
 	alSourcef(source[2], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 2
 	alSourcef(source[3], AL_PITCH, 1.0f);
@@ -555,7 +556,7 @@ void configAudioListeners() {
 	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
 	alSourcefv(source[3], AL_VELOCITY, sourceZ2NVel);
 	alSourcei(source[3], AL_BUFFER, buffer[2]);
-	alSourcei(source[3], AL_LOOPING, AL_TRUE);
+	alSourcei(source[3], AL_LOOPING, AL_FALSE);
 	alSourcef(source[3], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 3
 	alSourcef(source[4], AL_PITCH, 1.0f);
@@ -563,7 +564,7 @@ void configAudioListeners() {
 	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
 	alSourcefv(source[4], AL_VELOCITY, sourceZ3NVel);
 	alSourcei(source[4], AL_BUFFER, buffer[2]);
-	alSourcei(source[4], AL_LOOPING, AL_TRUE);
+	alSourcei(source[4], AL_LOOPING, AL_FALSE);
 	alSourcef(source[4], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 4
 	alSourcef(source[5], AL_PITCH, 1.0f);
@@ -571,7 +572,7 @@ void configAudioListeners() {
 	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
 	alSourcefv(source[5], AL_VELOCITY, sourceZ4NVel);
 	alSourcei(source[5], AL_BUFFER, buffer[2]);
-	alSourcei(source[5], AL_LOOPING, AL_TRUE);
+	alSourcei(source[5], AL_LOOPING, AL_FALSE);
 	alSourcef(source[5], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 5
 	alSourcef(source[6], AL_PITCH, 1.0f);
@@ -579,7 +580,7 @@ void configAudioListeners() {
 	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
 	alSourcefv(source[6], AL_VELOCITY, sourceZ5NVel);
 	alSourcei(source[6], AL_BUFFER, buffer[2]);
-	alSourcei(source[6], AL_LOOPING, AL_TRUE);
+	alSourcei(source[6], AL_LOOPING, AL_FALSE);
 	alSourcef(source[6], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 6
 	alSourcef(source[7], AL_PITCH, 1.0f);
@@ -587,7 +588,7 @@ void configAudioListeners() {
 	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
 	alSourcefv(source[7], AL_VELOCITY, sourceZ6NVel);
 	alSourcei(source[7], AL_BUFFER, buffer[2]);
-	alSourcei(source[7], AL_LOOPING, AL_TRUE);
+	alSourcei(source[7], AL_LOOPING, AL_FALSE);
 	alSourcef(source[7], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 7
 	alSourcef(source[8], AL_PITCH, 1.0f);
@@ -595,7 +596,7 @@ void configAudioListeners() {
 	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
 	alSourcefv(source[8], AL_VELOCITY, sourceZ7NVel);
 	alSourcei(source[8], AL_BUFFER, buffer[2]);
-	alSourcei(source[8], AL_LOOPING, AL_TRUE);
+	alSourcei(source[8], AL_LOOPING, AL_FALSE);
 	alSourcef(source[8], AL_MAX_DISTANCE, 1000);
 	//ZombieDie - 1
 	alSourcef(source[9], AL_PITCH, 1.0f);
@@ -2841,6 +2842,17 @@ void applicationLoop() {
 				sourcesPlay[i + 9] = true;	//Sonido de muerte de zombie
 			}
 		}
+		/*if (isZombieAlive[0]) {
+			sourcesPlay[2] = true;
+			std::cout << "Zombie Alive" << std::endl;
+			std::cout << "Sonido ZombieN = " << sourcesPlay[2] << "\nSonido ZombieD = " << sourcesPlay[9] << std::endl;
+		}
+		else {
+			sourcesPlay[2] = false;
+			sourcesPlay[9] = true;
+			std::cout << "Zombie Dead" << std::endl;
+			std::cout << "Sonido ZombieN = " << sourcesPlay[2] << "\nSonido ZombieD = " << sourcesPlay[9] << std::endl;
+		}*/
 
 		if (isKeyCollected[0])
 			sourcesPlay[16] = true;
