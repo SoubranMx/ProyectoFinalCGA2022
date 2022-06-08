@@ -1987,9 +1987,9 @@ void applicationLoop() {
 	float angleTarget;
 
 	//Posicion Inicial
-	//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(-90.0f, 0.0f, 85.0f));
+	modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(-90.0f, 0.0f, 85.0f));
 	//Posicion custom centro del mapa
-	modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.0f));
+	//modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Walls ModelMatrixWall
 	//Translate into correct place
@@ -2021,13 +2021,10 @@ void applicationLoop() {
 	//House A houseAMatrix = { front, left, top };
 	houseAMatrix[0] = glm::scale(houseAMatrix[0], escalamientoWalls);
 	houseAMatrix[0] = glm::translate(houseAMatrix[0], glm::vec3(7.46f, 0, -7.46f));
-	houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(-90.0f), glm::vec3(0, 1, 0));
-	houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(270.0f), glm::vec3(1, 0, 0));
 	houseAMatrix[0][3][1] = terrain.getHeightTerrain(houseAMatrix[0][3][0], houseAMatrix[0][3][2]);
 
 	houseAMatrix[1] = glm::scale(houseAMatrix[1], escalamientoWalls);
 	houseAMatrix[1] = glm::translate(houseAMatrix[1], glm::vec3(4.48f, 0, -9.83f));
-	houseAMatrix[1] = glm::rotate(houseAMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseAMatrix[1][3][1] = terrain.getHeightTerrain(houseAMatrix[1][3][0], houseAMatrix[1][3][2]);
 
 	houseAMatrix[2] = glm::scale(houseAMatrix[2], escalamientoWalls);
@@ -2037,22 +2034,18 @@ void applicationLoop() {
 	//HouseB houseBMatrix = { back, front, left1, left2, top };
 	houseBMatrix[0] = glm::scale(houseBMatrix[0], escalamientoWalls);
 	houseBMatrix[0] = glm::translate(houseBMatrix[0], glm::vec3(8.17f, 0, -2.28f));
-	houseBMatrix[0] = glm::rotate(houseBMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseBMatrix[0][3][1] = terrain.getHeightTerrain(houseBMatrix[0][3][0], houseBMatrix[0][3][2]);
 
 	houseBMatrix[1] = glm::scale(houseBMatrix[1], escalamientoWalls);
 	houseBMatrix[1] = glm::translate(houseBMatrix[1], glm::vec3(8.17f, 0, 9.06f));
-	houseBMatrix[1] = glm::rotate(houseBMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseBMatrix[1][3][1] = terrain.getHeightTerrain(houseBMatrix[1][3][0], houseBMatrix[1][3][2]);
 
 	houseBMatrix[2] = glm::scale(houseBMatrix[2], escalamientoWalls);
 	houseBMatrix[2] = glm::translate(houseBMatrix[2], glm::vec3(4.17f, 0.0f, 0.75f));
-	houseBMatrix[2] = glm::rotate(houseBMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseBMatrix[2][3][1] = terrain.getHeightTerrain(houseBMatrix[2][3][0], houseBMatrix[2][3][2]);
 
 	houseBMatrix[3] = glm::scale(houseBMatrix[3], escalamientoWalls);
 	houseBMatrix[3] = glm::translate(houseBMatrix[3], glm::vec3(4.17f, 0.0f, 7.146f));
-	houseBMatrix[3] = glm::rotate(houseBMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseBMatrix[3][3][1] = terrain.getHeightTerrain(houseBMatrix[3][3][0], houseBMatrix[3][3][2]);
 
 	houseBMatrix[4] = glm::scale(houseBMatrix[4], escalamientoWalls);
@@ -2062,12 +2055,10 @@ void applicationLoop() {
 	//HouseC 	houseCMatrix = { front, left, top };
 	houseCMatrix[0] = glm::scale(houseCMatrix[0], escalamientoWalls);
 	houseCMatrix[0] = glm::translate(houseCMatrix[0], glm::vec3(-1.3614f, 0, -7.3674f));
-	houseCMatrix[0] = glm::rotate(houseCMatrix[0],glm::radians(-90.0f), glm::vec3(1,0,0));
 	houseCMatrix[0][3][1] = terrain.getHeightTerrain(houseCMatrix[0][3][0], houseCMatrix[0][3][2]);
 
 	houseCMatrix[1] = glm::scale(houseCMatrix[1], escalamientoWalls);
 	houseCMatrix[1] = glm::translate(houseCMatrix[1], glm::vec3(-3.9375f, 0, -9.7709f));
-	houseCMatrix[1] = glm::rotate(houseCMatrix[1],glm::radians(-90.0f), glm::vec3(1,0,0));
 	houseCMatrix[1][3][1] = terrain.getHeightTerrain(houseCMatrix[1][3][0], houseCMatrix[1][3][2]);
 
 	houseCMatrix[2] = glm::scale(houseCMatrix[2], escalamientoWalls);
@@ -2077,37 +2068,31 @@ void applicationLoop() {
 	//HouseD	houseDMatrix = { back, left, right, top };
 	houseDMatrix[0] = glm::scale(houseDMatrix[0], escalamientoWalls);
 	houseDMatrix[0] = glm::translate(houseDMatrix[0], glm::vec3(-1.626f, 0, -5.1438f));
-	houseDMatrix[0] = glm::rotate(houseDMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseDMatrix[0][3][1] = terrain.getHeightTerrain(houseDMatrix[0][3][0], houseDMatrix[0][3][2]);
 	
 	houseDMatrix[1] = glm::scale(houseDMatrix[1], escalamientoWalls);
 	houseDMatrix[1] = glm::translate(houseDMatrix[1], glm::vec3(-3.724f, 0, -2.1339f));
-	houseDMatrix[1] = glm::rotate(houseDMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseDMatrix[1][3][1] = terrain.getHeightTerrain(houseDMatrix[1][3][0], houseDMatrix[1][3][2]);
 
 	houseDMatrix[2] = glm::scale(houseDMatrix[2], escalamientoWalls);
 	houseDMatrix[2] = glm::translate(houseDMatrix[2], glm::vec3(0.48886f, 0, -2.1339f));
-	houseDMatrix[2] = glm::rotate(houseDMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseDMatrix[2][3][1] = terrain.getHeightTerrain(houseDMatrix[2][3][0], houseDMatrix[2][3][2]);
 
 	houseDMatrix[3] = glm::scale(houseDMatrix[3], escalamientoWalls);
-	houseDMatrix[3] = glm::translate(houseDMatrix[3], glm::vec3(-1.6109f, 4.0f, -4.0189f));
+	houseDMatrix[3] = glm::translate(houseDMatrix[3], glm::vec3(-1.6109f, 4.0f, -2.4316f));
 	houseDMatrix[3] = glm::rotate(houseDMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
 	//HouseE	houseEMatrix = { back, left, right, top };
 	houseEMatrix[0] = glm::scale(houseEMatrix[0], escalamientoWalls);
 	houseEMatrix[0] = glm::translate(houseEMatrix[0], glm::vec3(-1.5f, 0, 3.6823f));
-	houseEMatrix[0] = glm::rotate(houseEMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseEMatrix[0][3][1] = terrain.getHeightTerrain(houseEMatrix[0][3][0], houseEMatrix[0][3][2]);
 
 	houseEMatrix[1] = glm::scale(houseEMatrix[1], escalamientoWalls);
 	houseEMatrix[1] = glm::translate(houseEMatrix[1], glm::vec3(-3.6023f, 0, 7.4836f));
-	houseEMatrix[1] = glm::rotate(houseEMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseEMatrix[1][3][1] = terrain.getHeightTerrain(houseEMatrix[1][3][0], houseEMatrix[1][3][2]);
 
 	houseEMatrix[2] = glm::scale(houseEMatrix[2], escalamientoWalls);
 	houseEMatrix[2] = glm::translate(houseEMatrix[2], glm::vec3(0.6229f, 0, 8.242f));
-	houseEMatrix[2] = glm::rotate(houseEMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	houseEMatrix[2][3][1] = terrain.getHeightTerrain(houseEMatrix[2][3][0], houseEMatrix[2][3][2]);
 
 	houseEMatrix[3] = glm::scale(houseEMatrix[3], escalamientoWalls);
@@ -2584,6 +2569,144 @@ void applicationLoop() {
 		wallFCollider.c = glm::vec3(modelMatrixColliderWallF[3]);
 		wallFCollider.e = modelWallF.getObb().e * escalamientoWalls;
 		addOrUpdateColliders(collidersOBB, "wallF", wallFCollider, modelMatrixWallF);
+
+		//Colliders Houses
+		//House A houseAMatrix = { front, left, top };
+		/*
+			houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(-90.0f), glm::vec3(0, 1, 0));
+			houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(270.0f), glm::vec3(1, 0, 0));
+			houseAMatrix[1] = glm::rotate(houseAMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		*/
+		glm::mat4 modelMatrixColliderHAfront = glm::mat4(houseAMatrix[0]);
+		AbstractModel::OBB HAfrontCollider;
+		HAfrontCollider.u = glm::quat_cast(houseAMatrix[0]);
+		modelMatrixColliderHAfront = glm::scale(modelMatrixColliderHAfront, escalamientoWalls);
+		modelMatrixColliderHAfront = glm::translate(modelMatrixColliderHAfront, modelHAfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HAfrontCollider.c = glm::vec3(modelMatrixColliderHAfront[3]);
+		HAfrontCollider.e = modelHAfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HA-front", HAfrontCollider, houseAMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHAleft = glm::mat4(houseAMatrix[1]);
+		AbstractModel::OBB HAleftCollider;
+		HAleftCollider.u = glm::quat_cast(houseAMatrix[1]);
+		modelMatrixColliderHAleft = glm::scale(modelMatrixColliderHAleft, escalamientoWalls);
+		modelMatrixColliderHAleft = glm::translate(modelMatrixColliderHAleft, modelHAleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		modelMatrixColliderHAleft = glm::rotate(modelMatrixColliderHAleft, glm::radians(-90.0f), glm::vec3(1,0,0));
+		HAleftCollider.c = glm::vec3(modelMatrixColliderHAleft[3]);
+		HAleftCollider.e = modelHAleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HA-left", HAleftCollider, houseAMatrix[1]);
+		//Top no necesario
+		
+		//HouseB houseBMatrix = { back, front, left1, left2, top };
+		glm::mat4 modelMatrixColliderHBback = glm::mat4(houseBMatrix[0]);
+		AbstractModel::OBB HBbackCollider;
+		HBbackCollider.u = glm::quat_cast(houseBMatrix[0]);
+		modelMatrixColliderHBback = glm::scale(modelMatrixColliderHBback, escalamientoWalls);
+		modelMatrixColliderHBback = glm::translate(modelMatrixColliderHBback, modelHBback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBbackCollider.c = glm::vec3(modelMatrixColliderHBback[3]);
+		HBbackCollider.e = modelHBback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-back", HBbackCollider, houseBMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHBfront = glm::mat4(houseBMatrix[1]);
+		AbstractModel::OBB HBfrontCollider;
+		HBfrontCollider.u = glm::quat_cast(houseBMatrix[1]);
+		modelMatrixColliderHBfront = glm::scale(modelMatrixColliderHBfront, escalamientoWalls);
+		modelMatrixColliderHBfront = glm::translate(modelMatrixColliderHBfront, modelHBfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBfrontCollider.c = glm::vec3(modelMatrixColliderHBfront[3]);
+		HBfrontCollider.e = modelHBfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-front", HBfrontCollider, houseBMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHBleft1 = glm::mat4(houseBMatrix[2]);
+		AbstractModel::OBB HBleft1Collider;
+		HBleft1Collider.u = glm::quat_cast(houseBMatrix[2]);
+		modelMatrixColliderHBleft1 = glm::scale(modelMatrixColliderHBleft1, escalamientoWalls);
+		modelMatrixColliderHBleft1 = glm::translate(modelMatrixColliderHBleft1, modelHBleft1.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBleft1Collider.c = glm::vec3(modelMatrixColliderHBleft1[3]);
+		HBleft1Collider.e = modelHBleft1.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-left1", HBleft1Collider, houseBMatrix[2]);
+
+		glm::mat4 modelMatrixColliderHBleft2 = glm::mat4(houseBMatrix[3]);
+		AbstractModel::OBB HBleft2Collider;
+		HBleft2Collider.u = glm::quat_cast(houseBMatrix[3]);
+		modelMatrixColliderHBleft2 = glm::scale(modelMatrixColliderHBleft2, escalamientoWalls);
+		modelMatrixColliderHBleft2 = glm::translate(modelMatrixColliderHBleft2, modelHBleft2.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBleft2Collider.c = glm::vec3(modelMatrixColliderHBleft2[3]);
+		HBleft2Collider.e = modelHBleft2.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-left2", HBleft2Collider, houseBMatrix[3]);
+
+		//HouseC 	houseCMatrix = { front, left, top };
+		glm::mat4 modelMatrixColliderHCfront = glm::mat4(houseCMatrix[0]);
+		AbstractModel::OBB HCfrontCollider;
+		HCfrontCollider.u = glm::quat_cast(houseCMatrix[0]);
+		modelMatrixColliderHCfront = glm::scale(modelMatrixColliderHCfront, escalamientoWalls);
+		modelMatrixColliderHCfront = glm::translate(modelMatrixColliderHCfront, modelHCfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HCfrontCollider.c = glm::vec3(modelMatrixColliderHCfront[3]);
+		HCfrontCollider.e = modelHCfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HC-front", HCfrontCollider, houseCMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHCleft = glm::mat4(houseCMatrix[1]);
+		AbstractModel::OBB HCleftCollider;
+		HCleftCollider.u = glm::quat_cast(houseCMatrix[1]);
+		modelMatrixColliderHCleft = glm::scale(modelMatrixColliderHCleft, escalamientoWalls);
+		modelMatrixColliderHCleft = glm::translate(modelMatrixColliderHCleft, modelHCleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HCleftCollider.c = glm::vec3(modelMatrixColliderHCleft[3]);
+		HCleftCollider.e = modelHCleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HC-left", HCleftCollider, houseCMatrix[1]);
+		//HouseD	houseDMatrix = { back, left, right, top };
+		glm::mat4 modelMatrixColliderHDback = glm::mat4(houseDMatrix[0]);
+		AbstractModel::OBB HDbackCollider;
+		HDbackCollider.u = glm::quat_cast(houseDMatrix[0]);
+		modelMatrixColliderHDback = glm::scale(modelMatrixColliderHDback, escalamientoWalls);
+		modelMatrixColliderHDback = glm::translate(modelMatrixColliderHDback, modelHDback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDbackCollider.c = glm::vec3(modelMatrixColliderHDback[3]);
+		HDbackCollider.e = modelHDback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-back", HDbackCollider, houseDMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHDleft = glm::mat4(houseDMatrix[1]);
+		AbstractModel::OBB HDleftCollider;
+		HDleftCollider.u = glm::quat_cast(houseDMatrix[1]);
+		modelMatrixColliderHDleft = glm::scale(modelMatrixColliderHDleft, escalamientoWalls);
+		modelMatrixColliderHDleft = glm::translate(modelMatrixColliderHDleft, modelHDleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDleftCollider.c = glm::vec3(modelMatrixColliderHDleft[3]);
+		HDleftCollider.e = modelHDleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-left", HDleftCollider, houseDMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHDright = glm::mat4(houseDMatrix[2]);
+		AbstractModel::OBB HDrightCollider;
+		HDrightCollider.u = glm::quat_cast(houseDMatrix[2]);
+		modelMatrixColliderHDright = glm::scale(modelMatrixColliderHDright, escalamientoWalls);
+		modelMatrixColliderHDright = glm::translate(modelMatrixColliderHDright, modelHDright.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDrightCollider.c = glm::vec3(modelMatrixColliderHDright[3]);
+		HDrightCollider.e = modelHDright.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-right", HDrightCollider, houseDMatrix[2]);
+		//HouseE	houseEMatrix = { back, left, right, top };
+		glm::mat4 modelMatrixColliderHEback = glm::mat4(houseEMatrix[0]);
+		AbstractModel::OBB HEbackCollider;
+		HEbackCollider.u = glm::quat_cast(houseEMatrix[0]);
+		modelMatrixColliderHEback = glm::scale(modelMatrixColliderHEback, escalamientoWalls);
+		modelMatrixColliderHEback = glm::translate(modelMatrixColliderHEback, modelHEback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HEbackCollider.c = glm::vec3(modelMatrixColliderHEback[3]);
+		HEbackCollider.e = modelHEback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-back", HEbackCollider, houseEMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHEleft = glm::mat4(houseEMatrix[1]);
+		AbstractModel::OBB HEleftCollider;
+		HEleftCollider.u = glm::quat_cast(houseEMatrix[1]);
+		modelMatrixColliderHEleft = glm::scale(modelMatrixColliderHEleft, escalamientoWalls);
+		modelMatrixColliderHEleft = glm::translate(modelMatrixColliderHEleft, modelHEleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HEleftCollider.c = glm::vec3(modelMatrixColliderHEleft[3]);
+		HEleftCollider.e = modelHEleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-left", HEleftCollider, houseEMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHEright = glm::mat4(houseEMatrix[2]);
+		AbstractModel::OBB HErightCollider;
+		HErightCollider.u = glm::quat_cast(houseEMatrix[2]);
+		modelMatrixColliderHEright = glm::scale(modelMatrixColliderHEright, escalamientoWalls);
+		modelMatrixColliderHEright = glm::translate(modelMatrixColliderHEright, modelHEright.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HErightCollider.c = glm::vec3(modelMatrixColliderHEright[3]);
+		HErightCollider.e = modelHEright.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-right", HErightCollider, houseEMatrix[2]);
+
 
 		// Lamps1 colliders
 		for (int i = 0; i < lamp1Position.size(); i++) {
@@ -3243,12 +3366,12 @@ void renderScene(bool renderParticles) {
 
 	//Walls Render
 	//modelMatrixWallA[3][1] = terrain.getHeightTerrain(modelMatrixWallA[3][0], modelMatrixWallA[3][2]);
-	modelWallA.render(modelMatrixWallA);
+	/*modelWallA.render(modelMatrixWallA);
 	modelWallB.render(modelMatrixWallB);
 	modelWallC.render(modelMatrixWallC);
 	modelWallD.render(modelMatrixWallD);
 	modelWallE.render(modelMatrixWallE);
-	modelWallF.render(modelMatrixWallF);
+	modelWallF.render(modelMatrixWallF);*/
 
 	//House Render
 	//HouseA	houseAMatrix = { front, left, top };
