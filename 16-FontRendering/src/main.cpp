@@ -83,6 +83,35 @@ std::string wallObjDir[6] = {
 	"../models/Walls/WallE.fbx",
 	"../models/Walls/WallF.fbx"
 };
+std::string HAobjDir[3] = {
+	"../models/Houses/HA/HA-front.fbx",
+	"../models/Houses/HA/HA-left.fbx",
+	"../models/Houses/HA/HA-top.fbx"
+};
+std::string HBobjDir[5] = {
+	"../models/Houses/HB/HB-back.fbx",
+	"../models/Houses/HB/HB-front.fbx",
+	"../models/Houses/HB/HB-left1.fbx",
+	"../models/Houses/HB/HB-left2.fbx",
+	"../models/Houses/HB/HB-top.fbx"
+};
+std::string HCobjDir[3] = {
+	"../models/Houses/HC/HC-front.fbx",
+	"../models/Houses/HC/HC-left.fbx",
+	"../models/Houses/HC/HC-top.fbx"
+};
+std::string HDobjDir[4] = {
+	"../models/Houses/HD/HD-back.fbx",
+	"../models/Houses/HD/HD-left.fbx",
+	"../models/Houses/HD/HD-right.fbx",
+	"../models/Houses/HD/HD-top.fbx"
+};
+std::string HEobjDir[4] = {
+	"../models/Houses/HE/HE-back.fbx",
+	"../models/Houses/HE/HE-left.fbx",
+	"../models/Houses/HE/HE-right.fbx",
+	"../models/Houses/HE/HE-top.fbx"
+};
 
 GLFWwindow *window;
 
@@ -128,6 +157,11 @@ Model modelFountain;
 
 //Walls
 Model modelWallA, modelWallB, modelWallC, modelWallD, modelWallE, modelWallF;
+Model modelHAleft, modelHAfront, modelHAtop;	//3
+Model modelHBleft1, modelHBleft2, modelHBtop, modelHBfront, modelHBback;	//5
+Model modelHCleft, modelHCfront, modelHCtop;	//3
+Model modelHDleft, modelHDright, modelHDtop, modelHDback;	//4
+Model modelHEleft, modelHEright, modelHEtop, modelHEback;	//4
 // Model animate instance
 Model playerModelAnimate;
 Model zombieModelAnimate1;
@@ -187,6 +221,12 @@ glm::mat4 modelMatrixWallC = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallD = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallE = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallF = glm::mat4(1.0f);
+//Houses
+std::vector<glm::mat4> houseAMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseBMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseCMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseDMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseEMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 
 glm::mat4 modelMatrixPlayer = glm::mat4(1.0f);
 glm::vec3 escalamientoPlayer = glm::vec3(0.08f);
@@ -963,6 +1003,50 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelWallF.loadModel(wallObjDir[5]);
 	modelWallF.setShader(&shaderMulLighting);
 
+	//Houses
+	modelHAfront.loadModel(HAobjDir[0]);
+	modelHAfront.setShader(&shaderMulLighting);
+	modelHAleft.loadModel(HAobjDir[1]);
+	modelHAleft.setShader(&shaderMulLighting);
+	modelHAtop.loadModel(HAobjDir[2]);
+	modelHAtop.setShader(&shaderMulLighting);
+
+	modelHBback.loadModel(HBobjDir[0]);
+	modelHBback.setShader(&shaderMulLighting);
+	modelHBfront.loadModel(HBobjDir[1]);
+	modelHBfront.setShader(&shaderMulLighting);
+	modelHBleft1.loadModel(HBobjDir[2]);
+	modelHBleft1.setShader(&shaderMulLighting);
+	modelHBleft2.loadModel(HBobjDir[3]);
+	modelHBleft2.setShader(&shaderMulLighting);
+	modelHBtop.loadModel(HBobjDir[4]);
+	modelHBtop.setShader(&shaderMulLighting);
+
+	modelHCfront.loadModel(HCobjDir[0]);
+	modelHCfront.setShader(&shaderMulLighting);
+	modelHCleft.loadModel(HCobjDir[1]);
+	modelHCleft.setShader(&shaderMulLighting);
+	modelHCtop.loadModel(HCobjDir[2]);
+	modelHCtop.setShader(&shaderMulLighting);
+
+	modelHDback.loadModel(HDobjDir[0]);
+	modelHDback.setShader(&shaderMulLighting);
+	modelHDleft.loadModel(HDobjDir[1]);
+	modelHDleft.setShader(&shaderMulLighting);
+	modelHDright.loadModel(HDobjDir[2]);
+	modelHDright.setShader(&shaderMulLighting);
+	modelHDtop.loadModel(HDobjDir[3]);
+	modelHDtop.setShader(&shaderMulLighting);
+
+	modelHEback.loadModel(HEobjDir[0]);
+	modelHEback.setShader(&shaderMulLighting);
+	modelHEleft.loadModel(HEobjDir[1]);
+	modelHEleft.setShader(&shaderMulLighting);
+	modelHEright.loadModel(HEobjDir[2]);
+	modelHEright.setShader(&shaderMulLighting);
+	modelHEtop.loadModel(HEobjDir[3]);
+	modelHEtop.setShader(&shaderMulLighting);
+
 	//Player
 	playerModelAnimate.loadModel("../models/Player/PlayerMixamo.fbx");
 	playerModelAnimate.setShader(&shaderMulLighting);
@@ -1384,6 +1468,26 @@ void destroy() {
 	modelWallD.destroy();
 	modelWallE.destroy();
 	modelWallF.destroy();
+
+	modelHAfront.destroy();
+	modelHAleft.destroy();
+	modelHAtop.destroy();
+	modelHBback.destroy();
+	modelHBfront.destroy();
+	modelHBleft1.destroy();
+	modelHBleft2.destroy();
+	modelHBtop.destroy();
+	modelHCfront.destroy();
+	modelHCleft.destroy();
+	modelHCtop.destroy();
+	modelHDback.destroy();
+	modelHDleft.destroy();
+	modelHDright.destroy();
+	modelHDtop.destroy();
+	modelHEback.destroy();
+	modelHEleft.destroy();
+	modelHEright.destroy();
+	modelHEtop.destroy();
 
 	// Custom objects animate
 	playerModelAnimate.destroy();
@@ -1913,7 +2017,103 @@ void applicationLoop() {
 	modelMatrixWallF = glm::translate(modelMatrixWallF, glm::vec3(6.64f, 0.0f, -5.08f));
 	modelMatrixWallF[3][1] = terrain.getHeightTerrain(modelMatrixWallF[3][0], modelMatrixWallF[3][2]);
 
+	//Posicionamiento de Houses
+	//House A houseAMatrix = { front, left, top };
+	houseAMatrix[0] = glm::scale(houseAMatrix[0], escalamientoWalls);
+	houseAMatrix[0] = glm::translate(houseAMatrix[0], glm::vec3(7.46f, 0, -7.46f));
+	houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(-90.0f), glm::vec3(0, 1, 0));
+	houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(270.0f), glm::vec3(1, 0, 0));
+	houseAMatrix[0][3][1] = terrain.getHeightTerrain(houseAMatrix[0][3][0], houseAMatrix[0][3][2]);
 
+	houseAMatrix[1] = glm::scale(houseAMatrix[1], escalamientoWalls);
+	houseAMatrix[1] = glm::translate(houseAMatrix[1], glm::vec3(4.48f, 0, -9.83f));
+	houseAMatrix[1] = glm::rotate(houseAMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseAMatrix[1][3][1] = terrain.getHeightTerrain(houseAMatrix[1][3][0], houseAMatrix[1][3][2]);
+
+	houseAMatrix[2] = glm::scale(houseAMatrix[2], escalamientoWalls);
+	houseAMatrix[2] = glm::translate(houseAMatrix[2], glm::vec3(8.32f, 4, -9.84f));
+	houseAMatrix[2] = glm::rotate(houseAMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseB houseBMatrix = { back, front, left1, left2, top };
+	houseBMatrix[0] = glm::scale(houseBMatrix[0], escalamientoWalls);
+	houseBMatrix[0] = glm::translate(houseBMatrix[0], glm::vec3(8.17f, 0, -2.28f));
+	houseBMatrix[0] = glm::rotate(houseBMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseBMatrix[0][3][1] = terrain.getHeightTerrain(houseBMatrix[0][3][0], houseBMatrix[0][3][2]);
+
+	houseBMatrix[1] = glm::scale(houseBMatrix[1], escalamientoWalls);
+	houseBMatrix[1] = glm::translate(houseBMatrix[1], glm::vec3(8.17f, 0, 9.06f));
+	houseBMatrix[1] = glm::rotate(houseBMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseBMatrix[1][3][1] = terrain.getHeightTerrain(houseBMatrix[1][3][0], houseBMatrix[1][3][2]);
+
+	houseBMatrix[2] = glm::scale(houseBMatrix[2], escalamientoWalls);
+	houseBMatrix[2] = glm::translate(houseBMatrix[2], glm::vec3(4.17f, 0.0f, 0.75f));
+	houseBMatrix[2] = glm::rotate(houseBMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseBMatrix[2][3][1] = terrain.getHeightTerrain(houseBMatrix[2][3][0], houseBMatrix[2][3][2]);
+
+	houseBMatrix[3] = glm::scale(houseBMatrix[3], escalamientoWalls);
+	houseBMatrix[3] = glm::translate(houseBMatrix[3], glm::vec3(4.17f, 0.0f, 7.146f));
+	houseBMatrix[3] = glm::rotate(houseBMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseBMatrix[3][3][1] = terrain.getHeightTerrain(houseBMatrix[3][3][0], houseBMatrix[3][3][2]);
+
+	houseBMatrix[4] = glm::scale(houseBMatrix[4], escalamientoWalls);
+	houseBMatrix[4] = glm::translate(houseBMatrix[4], glm::vec3(8.1637f, 4, 3.4089f));
+	houseBMatrix[4] = glm::rotate(houseBMatrix[4], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseC 	houseCMatrix = { front, left, top };
+	houseCMatrix[0] = glm::scale(houseCMatrix[0], escalamientoWalls);
+	houseCMatrix[0] = glm::translate(houseCMatrix[0], glm::vec3(-1.3614f, 0, -7.3674f));
+	houseCMatrix[0] = glm::rotate(houseCMatrix[0],glm::radians(-90.0f), glm::vec3(1,0,0));
+	houseCMatrix[0][3][1] = terrain.getHeightTerrain(houseCMatrix[0][3][0], houseCMatrix[0][3][2]);
+
+	houseCMatrix[1] = glm::scale(houseCMatrix[1], escalamientoWalls);
+	houseCMatrix[1] = glm::translate(houseCMatrix[1], glm::vec3(-3.9375f, 0, -9.7709f));
+	houseCMatrix[1] = glm::rotate(houseCMatrix[1],glm::radians(-90.0f), glm::vec3(1,0,0));
+	houseCMatrix[1][3][1] = terrain.getHeightTerrain(houseCMatrix[1][3][0], houseCMatrix[1][3][2]);
+
+	houseCMatrix[2] = glm::scale(houseCMatrix[2], escalamientoWalls);
+	houseCMatrix[2] = glm::translate(houseCMatrix[2], glm::vec3(-1.6393f, 4, -9.7861f));
+	houseCMatrix[2] = glm::rotate(houseCMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseD	houseDMatrix = { back, left, right, top };
+	houseDMatrix[0] = glm::scale(houseDMatrix[0], escalamientoWalls);
+	houseDMatrix[0] = glm::translate(houseDMatrix[0], glm::vec3(-1.626f, 0, -5.1438f));
+	houseDMatrix[0] = glm::rotate(houseDMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseDMatrix[0][3][1] = terrain.getHeightTerrain(houseDMatrix[0][3][0], houseDMatrix[0][3][2]);
+	
+	houseDMatrix[1] = glm::scale(houseDMatrix[1], escalamientoWalls);
+	houseDMatrix[1] = glm::translate(houseDMatrix[1], glm::vec3(-3.724f, 0, -2.1339f));
+	houseDMatrix[1] = glm::rotate(houseDMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseDMatrix[1][3][1] = terrain.getHeightTerrain(houseDMatrix[1][3][0], houseDMatrix[1][3][2]);
+
+	houseDMatrix[2] = glm::scale(houseDMatrix[2], escalamientoWalls);
+	houseDMatrix[2] = glm::translate(houseDMatrix[2], glm::vec3(0.48886f, 0, -2.1339f));
+	houseDMatrix[2] = glm::rotate(houseDMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseDMatrix[2][3][1] = terrain.getHeightTerrain(houseDMatrix[2][3][0], houseDMatrix[2][3][2]);
+
+	houseDMatrix[3] = glm::scale(houseDMatrix[3], escalamientoWalls);
+	houseDMatrix[3] = glm::translate(houseDMatrix[3], glm::vec3(-1.6109f, 4.0f, -4.0189f));
+	houseDMatrix[3] = glm::rotate(houseDMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseE	houseEMatrix = { back, left, right, top };
+	houseEMatrix[0] = glm::scale(houseEMatrix[0], escalamientoWalls);
+	houseEMatrix[0] = glm::translate(houseEMatrix[0], glm::vec3(-1.5f, 0, 3.6823f));
+	houseEMatrix[0] = glm::rotate(houseEMatrix[0], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseEMatrix[0][3][1] = terrain.getHeightTerrain(houseEMatrix[0][3][0], houseEMatrix[0][3][2]);
+
+	houseEMatrix[1] = glm::scale(houseEMatrix[1], escalamientoWalls);
+	houseEMatrix[1] = glm::translate(houseEMatrix[1], glm::vec3(-3.6023f, 0, 7.4836f));
+	houseEMatrix[1] = glm::rotate(houseEMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseEMatrix[1][3][1] = terrain.getHeightTerrain(houseEMatrix[1][3][0], houseEMatrix[1][3][2]);
+
+	houseEMatrix[2] = glm::scale(houseEMatrix[2], escalamientoWalls);
+	houseEMatrix[2] = glm::translate(houseEMatrix[2], glm::vec3(0.6229f, 0, 8.242f));
+	houseEMatrix[2] = glm::rotate(houseEMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	houseEMatrix[2][3][1] = terrain.getHeightTerrain(houseEMatrix[2][3][0], houseEMatrix[2][3][2]);
+
+	houseEMatrix[3] = glm::scale(houseEMatrix[3], escalamientoWalls);
+	houseEMatrix[3] = glm::translate(houseEMatrix[3], glm::vec3(-1.4875f, 4, 7.9188f));
+	houseEMatrix[3] = glm::rotate(houseEMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	//Fountain
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
 			glm::vec3(5.0, 0.0, -40.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
@@ -3049,6 +3249,34 @@ void renderScene(bool renderParticles) {
 	modelWallD.render(modelMatrixWallD);
 	modelWallE.render(modelMatrixWallE);
 	modelWallF.render(modelMatrixWallF);
+
+	//House Render
+	//HouseA	houseAMatrix = { front, left, top };
+	//HouseB	houseBMatrix = { back, front, left1, left2, top };
+	//HouseC 	houseCMatrix = { front, left, top };
+	//HouseD	houseDMatrix = { back, left, right, top };
+	//HouseE	houseEMatrix = { back, left, right, top };
+
+
+	modelHAfront.render(houseAMatrix[0]);
+	modelHAleft.render(houseAMatrix[1]);
+	modelHAtop.render(houseAMatrix[2]);
+	modelHBback.render(houseBMatrix[0]);
+	modelHBfront.render(houseBMatrix[1]);
+	modelHBleft1.render(houseBMatrix[2]);
+	modelHBleft2.render(houseBMatrix[3]);
+	modelHBtop.render(houseBMatrix[4]);
+	modelHCfront.render(houseCMatrix[0]);
+	modelHCleft.render(houseCMatrix[1]);
+	modelHCtop.render(houseCMatrix[2]);
+	modelHDback.render(houseDMatrix[0]);
+	modelHDleft.render(houseDMatrix[1]);
+	modelHDright.render(houseDMatrix[2]);
+	modelHDtop.render(houseDMatrix[3]);
+	modelHEback.render(houseEMatrix[0]);
+	modelHEleft.render(houseEMatrix[1]);
+	modelHEright.render(houseEMatrix[2]);
+	modelHEtop.render(houseEMatrix[3]);
 
 	if(isKeyCollected[0] == false)
 		keyModelAnimateA.render(modelMatrixKeyA);
