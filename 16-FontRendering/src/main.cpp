@@ -175,6 +175,8 @@ Model zombieModelAnimate7;
 //Keys
 Model keyModelAnimateA;
 Model keyModelAnimateB;
+
+Model modelRedDoor;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 12, heightMapTexture);
 
@@ -246,6 +248,9 @@ glm::mat4 modelMatrixKeyA = glm::mat4(1.0f);
 glm::mat4 modelMatrixKeyB = glm::mat4(1.0f);
 glm::vec3 scaleKey = glm::vec3(0.08f);
 //glm::vec3 scaleKey = glm::vec3(1.0f);
+
+glm::mat4 modelMatrixRedDoor = glm::mat4(1.0f);
+glm::vec3 scaleRedDoor = glm::vec3(8.0f);
 
 /*
 * Animations Player
@@ -1076,6 +1081,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	keyModelAnimateB.setShader(&shaderMulLighting);
 	keyModelAnimateB.setAnimationIndex(0);
 
+	//Door
+	modelRedDoor.loadModel("../models/Door/door.fbx");
+	modelRedDoor.setShader(&shaderMulLighting);
+
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
 	camera->setSensitivity(1.0);
@@ -1502,6 +1511,7 @@ void destroy() {
 
 	keyModelAnimateA.destroy();
 	keyModelAnimateB.destroy();
+	modelRedDoor.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -2159,6 +2169,11 @@ void applicationLoop() {
 	modelMatrixKeyA = glm::scale(modelMatrixKeyA, scaleKey);
 	modelMatrixKeyB = glm::scale(modelMatrixKeyB, scaleKey);
 
+	//Red Door
+	modelMatrixRedDoor = glm::scale(modelMatrixRedDoor, scaleRedDoor);
+	modelMatrixRedDoor = glm::translate(modelMatrixRedDoor, glm::vec3(11.527f, 0, 11.0f));
+	//modelMatrixRedDoor = glm::rotate(modelMatrixRedDoor, glm::radians(180.0f), glm::vec3(0, 1, 0));
+
 	lastTime = TimeManager::Instance().GetTime();
 
 	// Time for the particles animation
@@ -2706,6 +2721,15 @@ void applicationLoop() {
 		HErightCollider.c = glm::vec3(modelMatrixColliderHEright[3]);
 		HErightCollider.e = modelHEright.getObb().e * escalamientoWalls;
 		addOrUpdateColliders(collidersOBB, "HE-right", HErightCollider, houseEMatrix[2]);
+
+		glm::mat4 modelMatrixColliderDoor = glm::mat4(modelMatrixRedDoor);
+		AbstractModel::OBB redDoorCollider;
+		redDoorCollider.u = glm::quat_cast(modelMatrixRedDoor);
+		modelMatrixColliderDoor = glm::scale(modelMatrixColliderDoor, glm::vec3(8.0f));
+		modelMatrixColliderDoor = glm::translate(modelMatrixColliderDoor, modelRedDoor.getObb().c / glm::vec3(1.0f, scaleRedDoor.y, 8.0f));
+		redDoorCollider.c = glm::vec3(modelMatrixColliderDoor[3]);
+		redDoorCollider.e = modelRedDoor.getObb().e * scaleRedDoor * glm::vec3(1.0f);
+		addOrUpdateColliders(collidersOBB, "RedDoor", redDoorCollider, modelMatrixRedDoor);
 
 
 		// Lamps1 colliders
@@ -3381,7 +3405,7 @@ void renderScene(bool renderParticles) {
 	//HouseE	houseEMatrix = { back, left, right, top };
 
 
-	modelHAfront.render(houseAMatrix[0]);
+	/*modelHAfront.render(houseAMatrix[0]);
 	modelHAleft.render(houseAMatrix[1]);
 	modelHAtop.render(houseAMatrix[2]);
 	modelHBback.render(houseBMatrix[0]);
@@ -3400,13 +3424,13 @@ void renderScene(bool renderParticles) {
 	modelHEleft.render(houseEMatrix[1]);
 	modelHEright.render(houseEMatrix[2]);
 	modelHEtop.render(houseEMatrix[3]);
-
+	*/
 	if(isKeyCollected[0] == false)
 		keyModelAnimateA.render(modelMatrixKeyA);
 	if(isKeyCollected[1] == false)
 		keyModelAnimateB.render(modelMatrixKeyB);
 
-	
+	modelRedDoor.render(modelMatrixRedDoor);
 	/*******************************************
 	 * Custom Anim objects obj
 	 *******************************************/
