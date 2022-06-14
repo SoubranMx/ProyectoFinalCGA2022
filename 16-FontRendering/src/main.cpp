@@ -191,6 +191,10 @@ GLuint textureInit1ID, textureInit2ID, textureActivaID;
 Shader shaderTexture;
 Box boxIntro;
 bool iniciaPartida = false, presionarOpcion = false;
+bool isTryingToEscape = false;
+
+//UI Textures
+GLuint textureKeysCompleteID, textureKeyAFoundID, textureKeysEmptyID, textureKeysActivaID;
 
 
 // Modelo para el redener de texto
@@ -325,6 +329,7 @@ double deltaTimeShoot = 0.0f, currTimeShoot = 0.0f, lastTimeShoot = 0.0f;
 double deltaTimeShooted = 0.0f, deltaTimeDying = 0.0f;
 double currTimeShooted = 0.0f, lastTimeShooted = 0.0f;
 double currTimeDying = 0.0f, lastTimeDying = 0.0f;
+double currTimeKeys = 0.0f, lastTimeKeys = 0.0f, deltaTimeKeys = 0.0f;
 
 int zombieLife[7] = {3,3,3,3,3,3,3};
 bool isZombieShooted[7] = {false, false, false, false, false, false, false};
@@ -657,7 +662,7 @@ void configAudioListeners() {
 	alSourcefv(source[9], AL_VELOCITY, sourceZ1DVel);
 	alSourcei(source[9], AL_BUFFER, buffer[3]);
 	alSourcei(source[9], AL_LOOPING, AL_FALSE);
-	alSourcef(source[9], AL_MAX_DISTANCE, 500);
+	alSourcef(source[9], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 2
 	alSourcef(source[10], AL_PITCH, 1.0f);
 	alSourcef(source[10], AL_GAIN, 0.3f);
@@ -665,7 +670,7 @@ void configAudioListeners() {
 	alSourcefv(source[10], AL_VELOCITY, sourceZ2DVel);
 	alSourcei(source[10], AL_BUFFER, buffer[3]);
 	alSourcei(source[10], AL_LOOPING, AL_FALSE);
-	alSourcef(source[10], AL_MAX_DISTANCE, 500);
+	alSourcef(source[10], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 3
 	alSourcef(source[11], AL_PITCH, 1.0f);
 	alSourcef(source[11], AL_GAIN, 0.3f);
@@ -673,7 +678,7 @@ void configAudioListeners() {
 	alSourcefv(source[11], AL_VELOCITY, sourceZ3DVel);
 	alSourcei(source[11], AL_BUFFER, buffer[3]);
 	alSourcei(source[11], AL_LOOPING, AL_FALSE);
-	alSourcef(source[11], AL_MAX_DISTANCE, 500);
+	alSourcef(source[11], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 4
 	alSourcef(source[12], AL_PITCH, 1.0f);
 	alSourcef(source[12], AL_GAIN, 0.3f);
@@ -681,7 +686,7 @@ void configAudioListeners() {
 	alSourcefv(source[12], AL_VELOCITY, sourceZ4DVel);
 	alSourcei(source[12], AL_BUFFER, buffer[3]);
 	alSourcei(source[12], AL_LOOPING, AL_FALSE);
-	alSourcef(source[12], AL_MAX_DISTANCE, 500);
+	alSourcef(source[12], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 5
 	alSourcef(source[13], AL_PITCH, 1.0f);
 	alSourcef(source[13], AL_GAIN, 0.3f);
@@ -689,7 +694,7 @@ void configAudioListeners() {
 	alSourcefv(source[13], AL_VELOCITY, sourceZ5DVel);
 	alSourcei(source[13], AL_BUFFER, buffer[3]);
 	alSourcei(source[13], AL_LOOPING, AL_FALSE);
-	alSourcef(source[13], AL_MAX_DISTANCE, 500);
+	alSourcef(source[13], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 6
 	alSourcef(source[14], AL_PITCH, 1.0f);
 	alSourcef(source[14], AL_GAIN, 0.3f);
@@ -697,7 +702,7 @@ void configAudioListeners() {
 	alSourcefv(source[14], AL_VELOCITY, sourceZ6DVel);
 	alSourcei(source[14], AL_BUFFER, buffer[3]);
 	alSourcei(source[14], AL_LOOPING, AL_FALSE);
-	alSourcef(source[14], AL_MAX_DISTANCE, 500);
+	alSourcef(source[14], AL_MAX_DISTANCE, 1100);
 	//ZombieDie - 7
 	alSourcef(source[15], AL_PITCH, 1.0f);
 	alSourcef(source[15], AL_GAIN, 0.3f);
@@ -705,7 +710,7 @@ void configAudioListeners() {
 	alSourcefv(source[15], AL_VELOCITY, sourceZ7DVel);
 	alSourcei(source[15], AL_BUFFER, buffer[3]);
 	alSourcei(source[15], AL_LOOPING, AL_FALSE);
-	alSourcef(source[15], AL_MAX_DISTANCE, 500);
+	alSourcef(source[15], AL_MAX_DISTANCE, 1100);
 	//Collect Key A
 	alSourcef(source[16], AL_PITCH, 1.0f);
 	alSourcef(source[16], AL_GAIN, 0.3f);
@@ -713,7 +718,7 @@ void configAudioListeners() {
 	alSourcefv(source[16], AL_VELOCITY, sourceKeyAVel);
 	alSourcei(source[16], AL_BUFFER, buffer[4]);
 	alSourcei(source[16], AL_LOOPING, AL_FALSE);
-	alSourcef(source[16], AL_MAX_DISTANCE, 500);
+	alSourcef(source[16], AL_MAX_DISTANCE, 1100);
 	//Collect Key B
 	alSourcef(source[17], AL_PITCH, 1.0f);
 	alSourcef(source[17], AL_GAIN, 0.3f);
@@ -721,7 +726,7 @@ void configAudioListeners() {
 	alSourcefv(source[17], AL_VELOCITY, sourceKeyBVel);
 	alSourcei(source[17], AL_BUFFER, buffer[4]);
 	alSourcei(source[17], AL_LOOPING, AL_FALSE);
-	alSourcef(source[17], AL_MAX_DISTANCE, 500);
+	alSourcef(source[17], AL_MAX_DISTANCE, 1100);
 	//Walk
 	alSourcef(source[18], AL_PITCH, 1.0f);
 	alSourcef(source[18], AL_GAIN, 0.5f);
@@ -1400,6 +1405,66 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	else
 		std::cout << "Failed to load texture" << std::endl;
 	textureIntro2.freeImage(bitmap);
+
+	Texture textureKeyEmpty("../Textures/UI_empty.png");
+	bitmap = textureKeyEmpty.loadImage();
+	data = textureKeyEmpty.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeysEmptyID);
+	glBindTexture(GL_TEXTURE_2D, textureKeysEmptyID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyEmpty.freeImage(bitmap);
+
+	Texture textureKeyComplete("../Textures/UI_complete.png");
+	bitmap = textureKeyComplete.loadImage();
+	data = textureKeyComplete.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeysCompleteID);
+	glBindTexture(GL_TEXTURE_2D, textureKeysCompleteID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyComplete.freeImage(bitmap);
+
+	Texture textureKeyAFound("../Textures/UI_Afound.png");
+	bitmap = textureKeyAFound.loadImage();
+	data = textureKeyAFound.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeyAFoundID);
+	glBindTexture(GL_TEXTURE_2D, textureKeyAFoundID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyAFound.freeImage(bitmap);
 
 	std::uniform_real_distribution<float> distr01 =
 			std::uniform_real_distribution<float>(0.0f, 1.0f);
@@ -2285,6 +2350,7 @@ void applicationLoop() {
 	shadowBox = new ShadowBox(-lightPos, camera.get(), 100.0f, 0.1f, 60.0f);
 
 	textureActivaID = textureInit1ID;
+	textureKeysActivaID = textureKeysEmptyID;
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
@@ -2621,6 +2687,16 @@ void applicationLoop() {
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
 		renderScene();
+
+		//Render UI
+		shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureKeysActivaID);
+		shaderTexture.setInt("outTexture", 0);
+		boxIntro.render();
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		/*******************************************
 		 * Debug to box light box
 		 *******************************************/
@@ -3063,21 +3139,36 @@ void applicationLoop() {
 							isKeyCollected[0] = true;
 							keysFound++;
 							collidersOBB.erase("KeyA");
+							if (keysFound == 1)
+								textureKeysActivaID = textureKeyAFoundID;
+							else if (keysFound == 2)
+								textureKeysActivaID = textureKeysCompleteID;
 						}
 						if (jt->first.compare("KeyB") == 0) {
 							isKeyCollected[1] = true;
 							keysFound++;
 							collidersOBB.erase("KeyB");
+							if (keysFound == 1)
+								textureKeysActivaID = textureKeyAFoundID;
+							else if (keysFound == 2)
+								textureKeysActivaID = textureKeysCompleteID;
 						}
 
-						if (jt->first.compare("Zombie1") == 0 || jt->first.compare("Zombie2") == 0 || jt->first.compare("Zombie3") == 0 || jt->first.compare("Zombie4") == 0 || jt->first.compare("Zombie5") == 0 || jt->first.compare("Zombie6") == 0 || jt->first.compare("Zombie7") == 0) {
+						/*if (jt->first.compare("Zombie1") == 0 || jt->first.compare("Zombie2") == 0 || jt->first.compare("Zombie3") == 0 || jt->first.compare("Zombie4") == 0 || jt->first.compare("Zombie5") == 0 || jt->first.compare("Zombie6") == 0 || jt->first.compare("Zombie7") == 0) {
 							if (vidasPlayer == 3)
 								vidasPlayer = 2;
 							else if (vidasPlayer == 2)
 								vidasPlayer = 1;
 							else
 								vidasPlayer = 0;
+						}*/
+						if (jt->first.compare("RedDoor") == 0) {
+							isTryingToEscape = true;
+							currTimeKeys = glfwGetTime();
+							lastTimeKeys = glfwGetTime();
 						}
+						else if (keysFound < 2)
+							isTryingToEscape = false;
 					}
 				}
 			}
@@ -3290,10 +3381,11 @@ void applicationLoop() {
 		for (int i = 0; i <= 6; i++) {
 			if (isZombieAlive[i]) {
 				sourcesPlay[i + 2] = true;
-				sourcesPlay[i + 9] = false;
+				//sourcesPlay[i + 9] = false;
 			}
 			else {
-				sourcesPlay[i + 2] = false;	//Ya no vive el zombie normal
+				//sourcesPlay[i + 2] = false;	//Ya no vive el zombie normal
+				alSourceStop(sourcesPlay[i + 2]);
 				sourcesPlay[i + 9] = true;	//Sonido de muerte de zombie
 			}
 		}
@@ -3333,9 +3425,25 @@ void applicationLoop() {
 		 * Text Rendering
 		 *******************************************/
 		std::string keysFoundStr = std::to_string(keysFound);
-		std::string showText = "Llaves encontradas: " + keysFoundStr + " - 2";
-		modelText->render(showText, 0.6, 0.9);
-		modelText2->render("Vida: " + std::to_string(vidasPlayer), -0.5, 0.9);
+		//std::string showText = "Llaves encontradas: " + keysFoundStr + " - 2";
+		//modelText->render(showText, 0.6, 0.9);
+		if (isTryingToEscape == true && keysFound < 2) {
+			currTimeKeys = glfwGetTime();
+			deltaTimeKeys += currTimeKeys - lastTimeKeys;
+			lastTimeKeys = currTimeKeys;
+			if (deltaTimeKeys < 2.0f) {
+				modelText2->render("Aun no puedes salir, necesitas 2 llaves", -0.2, 0);
+			}
+			else {
+				modelText2->render("", -0.2, 0);
+				currTimeKeys = 0.0f;
+				deltaTimeKeys = 0.0f;
+				lastTimeKeys = 0.0f;
+			}
+
+		}
+		else if (keysFound == 2)
+			modelText2->render("Felicidades! Has escapado.", -0.2, 0);
 		glfwSwapBuffers(window);
 
 		/*******************************************
