@@ -3378,7 +3378,7 @@ void applicationLoop() {
 //{ fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
 		for (int i = 0; i <= 6; i++) {
 			if (isZombieAlive[i]) {
-				sourcesPlay[i + 2] = true;
+				//sourcesPlay[i + 2] = true;
 				//sourcesPlay[i + 9] = false;
 			}
 			else {
@@ -3387,17 +3387,6 @@ void applicationLoop() {
 				sourcesPlay[i + 9] = true;	//Sonido de muerte de zombie
 			}
 		}
-		/*if (isZombieAlive[0]) {
-			sourcesPlay[2] = true;
-			std::cout << "Zombie Alive" << std::endl;
-			std::cout << "Sonido ZombieN = " << sourcesPlay[2] << "\nSonido ZombieD = " << sourcesPlay[9] << std::endl;
-		}
-		else {
-			sourcesPlay[2] = false;
-			sourcesPlay[9] = true;
-			std::cout << "Zombie Dead" << std::endl;
-			std::cout << "Sonido ZombieN = " << sourcesPlay[2] << "\nSonido ZombieD = " << sourcesPlay[9] << std::endl;
-		}*/
 
 		if (isKeyCollected[0])
 			sourcesPlay[16] = true;
