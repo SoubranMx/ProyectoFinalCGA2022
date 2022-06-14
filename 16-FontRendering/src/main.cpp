@@ -186,6 +186,13 @@ GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 GLuint textureParticleFountainID, textureParticleFireID, texId;
 GLuint skyboxTextureID;
 
+//MAIN MENU TEXTURES
+GLuint textureInit1ID, textureInit2ID, textureActivaID;
+Shader shaderTexture;
+Box boxIntro;
+bool iniciaPartida = false, presionarOpcion = false;
+
+
 // Modelo para el redener de texto
 FontTypeRendering::FontTypeRendering *modelText;
 FontTypeRendering::FontTypeRendering *modelText2;
@@ -593,7 +600,7 @@ void configAudioListeners() {
 	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
 	alSourcefv(source[2], AL_VELOCITY, sourceZ1NVel);
 	alSourcei(source[2], AL_BUFFER, buffer[2]);
-	alSourcei(source[2], AL_LOOPING, AL_FALSE);
+	alSourcei(source[2], AL_LOOPING, AL_TRUE);
 	alSourcef(source[2], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 2
 	alSourcef(source[3], AL_PITCH, 1.0f);
@@ -601,7 +608,7 @@ void configAudioListeners() {
 	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
 	alSourcefv(source[3], AL_VELOCITY, sourceZ2NVel);
 	alSourcei(source[3], AL_BUFFER, buffer[2]);
-	alSourcei(source[3], AL_LOOPING, AL_FALSE);
+	alSourcei(source[3], AL_LOOPING, AL_TRUE);
 	alSourcef(source[3], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 3
 	alSourcef(source[4], AL_PITCH, 1.0f);
@@ -609,7 +616,7 @@ void configAudioListeners() {
 	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
 	alSourcefv(source[4], AL_VELOCITY, sourceZ3NVel);
 	alSourcei(source[4], AL_BUFFER, buffer[2]);
-	alSourcei(source[4], AL_LOOPING, AL_FALSE);
+	alSourcei(source[4], AL_LOOPING, AL_TRUE);
 	alSourcef(source[4], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 4
 	alSourcef(source[5], AL_PITCH, 1.0f);
@@ -617,7 +624,7 @@ void configAudioListeners() {
 	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
 	alSourcefv(source[5], AL_VELOCITY, sourceZ4NVel);
 	alSourcei(source[5], AL_BUFFER, buffer[2]);
-	alSourcei(source[5], AL_LOOPING, AL_FALSE);
+	alSourcei(source[5], AL_LOOPING, AL_TRUE);
 	alSourcef(source[5], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 5
 	alSourcef(source[6], AL_PITCH, 1.0f);
@@ -625,7 +632,7 @@ void configAudioListeners() {
 	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
 	alSourcefv(source[6], AL_VELOCITY, sourceZ5NVel);
 	alSourcei(source[6], AL_BUFFER, buffer[2]);
-	alSourcei(source[6], AL_LOOPING, AL_FALSE);
+	alSourcei(source[6], AL_LOOPING, AL_TRUE);
 	alSourcef(source[6], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 6
 	alSourcef(source[7], AL_PITCH, 1.0f);
@@ -633,7 +640,7 @@ void configAudioListeners() {
 	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
 	alSourcefv(source[7], AL_VELOCITY, sourceZ6NVel);
 	alSourcei(source[7], AL_BUFFER, buffer[2]);
-	alSourcei(source[7], AL_LOOPING, AL_FALSE);
+	alSourcei(source[7], AL_LOOPING, AL_TRUE);
 	alSourcef(source[7], AL_MAX_DISTANCE, 1000);
 	//ZombieNormal - 7
 	alSourcef(source[8], AL_PITCH, 1.0f);
@@ -641,7 +648,7 @@ void configAudioListeners() {
 	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
 	alSourcefv(source[8], AL_VELOCITY, sourceZ7NVel);
 	alSourcei(source[8], AL_BUFFER, buffer[2]);
-	alSourcei(source[8], AL_LOOPING, AL_FALSE);
+	alSourcei(source[8], AL_LOOPING, AL_TRUE);
 	alSourcef(source[8], AL_MAX_DISTANCE, 1000);
 	//ZombieDie - 1
 	alSourcef(source[9], AL_PITCH, 1.0f);
@@ -949,6 +956,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			"../Shaders/texturizado_depth_view.fs");
 	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs",
 			"../Shaders/shadow_mapping_depth.fs");
+	shaderTexture.initialize("../Shaders/texturizado.vs", "../Shaders/texturizado.fs");
 
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
@@ -968,6 +976,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	boxLightViewBox.init();
 	boxLightViewBox.setShader(&shaderViewDepth);
+
+	boxIntro.init();
+	boxIntro.setShader(&shaderTexture);
+	boxIntro.setScale(glm::vec3(2.0, 2.0, 1.0));
 
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
@@ -1348,6 +1360,47 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	textureParticleFire.freeImage(bitmap);
 
+	//Texturas Main Screen
+	Texture textureIntro1("../Textures/mainMenuIniciar.png");
+	bitmap = textureIntro1.loadImage();
+	data = textureIntro1.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureInit1ID);
+	glBindTexture(GL_TEXTURE_2D, textureInit1ID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureIntro1.freeImage(bitmap);
+
+	Texture textureIntro2("../Textures/mainMenuSalir.png");
+	bitmap = textureIntro2.loadImage();
+	data = textureIntro2.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureInit2ID);
+	glBindTexture(GL_TEXTURE_2D, textureInit2ID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureIntro2.freeImage(bitmap);
+
 	std::uniform_real_distribution<float> distr01 =
 			std::uniform_real_distribution<float>(0.0f, 1.0f);
 	std::mt19937 generator;
@@ -1610,115 +1663,138 @@ void modelMovementXboxPlayer() {
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCout);
 		const unsigned char* botones = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
 		float moveSpeed = 0.3f, rotationSpeed = 0.8f;
-		//Xbox 360 
+		
+		if (!iniciaPartida) {
+			if (textureActivaID == textureInit1ID && botones[7] == GLFW_PRESS) {
+				iniciaPartida = true;
+			}
+			if (textureActivaID == textureInit2ID && botones[7] == GLFW_PRESS) {
+				exitApp = true;
+			}
 
-		//0.2 es un umbral de movimiento 
-		// CONTROL MOVIMIENTO LS 
-
-		if (fabs(axes[1]) > 0.2) {
-			//en el codigo del profe, es -axes[1] pero en ese caso, estan invertidos los controles del joystick. Presionar hacia arriba en el joystick es ir hacia atrás, etc. 
-			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0, 0.0, -axes[1] * moveSpeed));
-		}
-		if (axes[1] > 0.2) {
-			animationIndexPlayer = 1;
-		}
-		else if (axes[1] < -0.2)
-			animationIndexPlayer = 2;
-
-		if (fabs(axes[0]) > 0.2) {
-			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * rotationSpeed), glm::vec3(0.0, 1.0, 0.0));
-			animationIndexPlayer = 1;
-		}
-
-		// CONTROL CAMARA RS 
-		if (fabs(axes[2]) > 0.2) {
-			camera->mouseMoveCamera(axes[2], 0, deltaTime);
-		}
-		if (fabs(axes[3]) > 0.2) {
-			camera->mouseMoveCamera(0, axes[3], deltaTime);
-		}
-
-		//Shooting
-		if (!isShooting) {
-			if (axes[5] > 0.5) {
-				isShooting = true;
-				animationIndexPlayer = 6;
-				//glfwSetTime(0.0f);
-				currTimeShoot = glfwGetTime();
-				deltaTimeShoot = 0.0f;
-				lastTimeShoot = glfwGetTime();
+			if (!presionarOpcion && (botones[10] == GLFW_PRESS || botones[12] == GLFW_PRESS)) {
+				presionarOpcion = true;
+				if (textureActivaID == textureInit1ID)
+					textureActivaID = textureInit2ID;
+				else if (textureActivaID == textureInit2ID)
+					textureActivaID = textureInit1ID;
+			}
+			else if (botones[10] == GLFW_RELEASE && botones[12] == GLFW_RELEASE) {
+				presionarOpcion = false;
 			}
 		}
-		else{
-			//Gunshot
-			sourceGunPos[0] = modelMatrixPlayer[3].x;
-			sourceGunPos[1] = modelMatrixPlayer[3].y;
-			sourceGunPos[2] = modelMatrixPlayer[3].z;
-			alSourcefv(source[1], AL_POSITION, sourceGunPos);
-			currTimeShoot = glfwGetTime();
-			deltaTimeShoot += currTimeShoot - lastTimeShoot;
-			lastTimeShoot = currTimeShoot;
-			if (deltaTimeShoot > 0.7) {
-				isShooting = false;
-				currTimeShoot = glfwGetTime();
-				deltaTimeShoot = 0.0f;
-				lastTimeShoot = glfwGetTime();
-			}
-		}
-		/*std::cout << "L2 : " << axes[4] << std::endl;
-		std::cout << "R2 : " << axes[5] << std::endl;*/
-		// CONTROL BOTONES 
-		/*
-		* XBOX 360
-		* 0		->		A
-		* 1		->		B
-		* 2		->		X
-		* 3		->		Y
-		* 4		->		L1
-		* 5		->		R1
-		* 6		->		Select
-		* 7		->		Start
-		* 8		->		L3
-		* 9		->		R3
-		* 10	->		PadUp
-		* 11	->		PadR
-		* 12	->		PadDown
-		* 13	->		PadL
-		*/
-		if (botones[0] == GLFW_PRESS && !isJumpPlayer) {
-			std::cout << "Se presiona A y saltamos" << buttonCount << std::endl;
-			isJumpPlayer = true;
-			startTimeJump = currTime;
-			tmv = 0;
-		}
+		else {
+			//Xbox 360 
 
-		if (botones[6] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 6 " << buttonCount << std::endl;
+			//0.2 es un umbral de movimiento 
+			// CONTROL MOVIMIENTO LS 
+			if (fabs(axes[1]) > 0.2) {
+				//en el codigo del profe, es -axes[1] pero en ese caso, estan invertidos los controles del joystick. Presionar hacia arriba en el joystick es ir hacia atrás, etc. 
+				modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0, 0.0, -axes[1] * moveSpeed));
+			}
+			if (axes[1] > 0.2) {
+				animationIndexPlayer = 1;
+			}
+			else if (axes[1] < -0.2)
+				animationIndexPlayer = 2;
+
+			if (fabs(axes[0]) > 0.2) {
+				modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * rotationSpeed), glm::vec3(0.0, 1.0, 0.0));
+				animationIndexPlayer = 1;
+			}
+
+			// CONTROL CAMARA RS 
+			if (fabs(axes[2]) > 0.2) {
+				camera->mouseMoveCamera(axes[2], 0, deltaTime);
+			}
+			if (fabs(axes[3]) > 0.2) {
+				camera->mouseMoveCamera(0, axes[3], deltaTime);
+			}
+
+			//Shooting
+			if (!isShooting) {
+				if (axes[5] > 0.5) {
+					isShooting = true;
+					animationIndexPlayer = 6;
+					//glfwSetTime(0.0f);
+					currTimeShoot = glfwGetTime();
+					deltaTimeShoot = 0.0f;
+					lastTimeShoot = glfwGetTime();
+				}
+			}
+			else{
+				//Gunshot
+				sourceGunPos[0] = modelMatrixPlayer[3].x;
+				sourceGunPos[1] = modelMatrixPlayer[3].y;
+				sourceGunPos[2] = modelMatrixPlayer[3].z;
+				alSourcefv(source[1], AL_POSITION, sourceGunPos);
+				currTimeShoot = glfwGetTime();
+				deltaTimeShoot += currTimeShoot - lastTimeShoot;
+				lastTimeShoot = currTimeShoot;
+				if (deltaTimeShoot > 0.7) {
+					isShooting = false;
+					currTimeShoot = glfwGetTime();
+					deltaTimeShoot = 0.0f;
+					lastTimeShoot = glfwGetTime();
+				}
+			}
+			/*std::cout << "L2 : " << axes[4] << std::endl;
+			std::cout << "R2 : " << axes[5] << std::endl;*/
+			// CONTROL BOTONES 
+			/*
+			* XBOX 360
+			* 0		->		A
+			* 1		->		B
+			* 2		->		X
+			* 3		->		Y
+			* 4		->		L1
+			* 5		->		R1
+			* 6		->		Select
+			* 7		->		Start
+			* 8		->		L3
+			* 9		->		R3
+			* 10	->		PadUp
+			* 11	->		PadR
+			* 12	->		PadDown
+			* 13	->		PadL
+			*/
+		
+
+			if (botones[0] == GLFW_PRESS && !isJumpPlayer) {
+				std::cout << "Se presiona A y saltamos" << buttonCount << std::endl;
+				isJumpPlayer = true;
+				startTimeJump = currTime;
+				tmv = 0;
+			}
+
+			if (botones[6] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 6 " << buttonCount << std::endl;
+			}
+			if (botones[7] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 7 " << buttonCount << std::endl;
+			}
+			if (botones[8] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 8" << buttonCount << std::endl;
+			}
+			if (botones[9] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 9" << buttonCount << std::endl;
+			}
+			if (botones[10] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 10" << buttonCount << std::endl;
+			}
+			if (botones[11] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 11" << buttonCount << std::endl;
+			}
+			if (botones[12] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 12" << buttonCount << std::endl;
+			}
+			if (botones[13] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 13" << buttonCount << std::endl;
+			}
+			//select + start + L1 + R2 => salir de la app
+			if (botones[6] == GLFW_PRESS && botones[7] == GLFW_PRESS && botones[4] == GLFW_PRESS && botones[5] == GLFW_PRESS)
+				exitApp = true;
 		}
-		if (botones[7] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 7 " << buttonCount << std::endl;
-		}
-		if (botones[8] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 8" << buttonCount << std::endl;
-		}
-		if (botones[9] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 9" << buttonCount << std::endl;
-		}
-		if (botones[10] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 10" << buttonCount << std::endl;
-		}
-		if (botones[11] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 11" << buttonCount << std::endl;
-		}
-		if (botones[12] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 12" << buttonCount << std::endl;
-		}
-		if (botones[13] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 13" << buttonCount << std::endl;
-		}
-		//select + start + L1 + R2 => salir de la app
-		if (botones[6] == GLFW_PRESS && botones[7] == GLFW_PRESS && botones[4] == GLFW_PRESS && botones[5] == GLFW_PRESS)
-			exitApp = true;
 	}
 }
 
@@ -1762,6 +1838,27 @@ bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
+
+	if (!iniciaPartida) {
+		bool presionarEnter = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
+		if (textureActivaID == textureInit1ID && presionarEnter) {
+			iniciaPartida = true;
+		}
+		if (textureActivaID == textureInit2ID && presionarEnter) {
+			exitApp = true;
+		}
+		if (!presionarOpcion && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+			presionarOpcion = true;
+			if (textureActivaID == textureInit1ID)
+				textureActivaID = textureInit2ID;
+			else if (textureActivaID == textureInit2ID)
+				textureActivaID = textureInit1ID;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+			presionarOpcion = false;
+		}
+	}
+
 	bool isJoystickPresent = false;
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
@@ -1777,18 +1874,18 @@ bool processInput(bool continueApplication) {
 	offsetY = 0;
 
 	// Seleccionar modelo
-	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
-		enableCountSelected = false;
-		modelSelected++;
-		if (modelSelected > 2)
-			modelSelected = 0;
-		if (modelSelected == 1)
-			//fileName = "../animaciones/animation_dart_joints.txt";
-		if (modelSelected == 2)
-			//fileName = "../animaciones/animation_dart.txt";
-		std::cout << "modelSelected:" << modelSelected << std::endl;
-	} else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-		enableCountSelected = true;
+	//if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+	//	enableCountSelected = false;
+	//	modelSelected++;
+	//	if (modelSelected > 2)
+	//		modelSelected = 0;
+	//	if (modelSelected == 1)
+	//		//fileName = "../animaciones/animation_dart_joints.txt";
+	//	if (modelSelected == 2)
+	//		//fileName = "../animaciones/animation_dart.txt";
+	//	std::cout << "modelSelected:" << modelSelected << std::endl;
+	//} else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+	//	enableCountSelected = true;
 	
 	bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	if(!isJumpPlayer && keySpaceStatus){
@@ -2187,6 +2284,8 @@ void applicationLoop() {
 
 	shadowBox = new ShadowBox(-lightPos, camera.get(), 100.0f, 0.1f, 60.0f);
 
+	textureActivaID = textureInit1ID;
+
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
 		if (currTime - lastTime < 0.016666667) {
@@ -2452,6 +2551,19 @@ void applicationLoop() {
 			shaderTerrain.setFloat(
 					"pointLights[" + std::to_string(lamp1Position.size() + i)
 							+ "].quadratic", 0.02);
+		}
+
+		if (!iniciaPartida) {
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glViewport(0, 0, screenWidth, screenHeight);
+			shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+			shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, textureActivaID);
+			shaderTexture.setInt("outTexture", 0);
+			boxIntro.render();
+			glfwSwapBuffers(window);
+			continue;
 		}
 
 		/*******************************************
@@ -3230,19 +3342,19 @@ void applicationLoop() {
 		 * Camera Update
 		 *******************************************/
 
-		if (modelSelected == 1) {
+		//if (modelSelected == 1) {
 			axis = glm::axis(glm::quat_cast(modelMatrixPlayer));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixPlayer));
 			target = playerCollider.c;
 			target.y += playerCollider.e.y;
-		}
+		//}
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
 		if (axis.y < 0)
 			angleTarget = -angleTarget;
 		//Posiciona la camara detras de Player, hacia enfrente.
-		if (modelSelected == 1)
+		//if (modelSelected == 1)
 			angleTarget -= glm::radians(180.0f);
 		camera->setCameraTarget(target);
 		camera->setAngleTarget(angleTarget);
@@ -3283,6 +3395,35 @@ void prepareScene() {
 
 	keyModelAnimateA.setShader(&shaderMulLighting);
 	keyModelAnimateB.setShader(&shaderMulLighting);
+
+	//Walls
+	modelWallA.setShader(&shaderMulLighting);
+	modelWallB.setShader(&shaderMulLighting);
+	modelWallC.setShader(&shaderMulLighting);
+	modelWallD.setShader(&shaderMulLighting);
+	modelWallE.setShader(&shaderMulLighting);
+	//Houses
+	modelHAfront.setShader(&shaderMulLighting);
+	modelHAleft.setShader(&shaderMulLighting);
+	modelHAtop.setShader(&shaderMulLighting);
+	modelHBback.setShader(&shaderMulLighting);
+	modelHBfront.setShader(&shaderMulLighting);
+	modelHBleft1.setShader(&shaderMulLighting);
+	modelHBleft2.setShader(&shaderMulLighting);
+	modelHBtop.setShader(&shaderMulLighting);
+	modelHCfront.setShader(&shaderMulLighting);
+	modelHCleft.setShader(&shaderMulLighting);
+	modelHCtop.setShader(&shaderMulLighting);
+	modelHDback.setShader(&shaderMulLighting);
+	modelHDleft.setShader(&shaderMulLighting);
+	modelHDright.setShader(&shaderMulLighting);
+	modelHDtop.setShader(&shaderMulLighting);
+	modelHEback.setShader(&shaderMulLighting);
+	modelHEleft.setShader(&shaderMulLighting);
+	modelHEright.setShader(&shaderMulLighting);
+	modelHEtop.setShader(&shaderMulLighting);
+	//Door
+	modelRedDoor.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -3311,6 +3452,35 @@ void prepareDepthScene() {
 
 	keyModelAnimateA.setShader(&shaderDepth);
 	keyModelAnimateB.setShader(&shaderDepth);
+
+	//Walls
+	/*modelWallA.setShader(&shaderDepth);
+	modelWallB.setShader(&shaderDepth);
+	modelWallC.setShader(&shaderDepth);
+	modelWallD.setShader(&shaderDepth);
+	modelWallE.setShader(&shaderDepth);*/
+	//Houses
+	modelHAfront.setShader(&shaderDepth);
+	modelHAleft.setShader(&shaderDepth);
+	modelHAtop.setShader(&shaderDepth);
+	modelHBback.setShader(&shaderDepth);
+	modelHBfront.setShader(&shaderDepth);
+	modelHBleft1.setShader(&shaderDepth);
+	modelHBleft2.setShader(&shaderDepth);
+	modelHBtop.setShader(&shaderDepth);
+	modelHCfront.setShader(&shaderDepth);
+	modelHCleft.setShader(&shaderDepth);
+	modelHCtop.setShader(&shaderDepth);
+	modelHDback.setShader(&shaderDepth);
+	modelHDleft.setShader(&shaderDepth);
+	modelHDright.setShader(&shaderDepth);
+	modelHDtop.setShader(&shaderDepth);
+	modelHEback.setShader(&shaderDepth);
+	modelHEleft.setShader(&shaderDepth);
+	modelHEright.setShader(&shaderDepth);
+	modelHEtop.setShader(&shaderDepth);
+	//Door
+	modelRedDoor.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -3390,12 +3560,12 @@ void renderScene(bool renderParticles) {
 
 	//Walls Render
 	//modelMatrixWallA[3][1] = terrain.getHeightTerrain(modelMatrixWallA[3][0], modelMatrixWallA[3][2]);
-	/*modelWallA.render(modelMatrixWallA);
+	modelWallA.render(modelMatrixWallA);
 	modelWallB.render(modelMatrixWallB);
 	modelWallC.render(modelMatrixWallC);
 	modelWallD.render(modelMatrixWallD);
 	modelWallE.render(modelMatrixWallE);
-	modelWallF.render(modelMatrixWallF);*/
+	modelWallF.render(modelMatrixWallF);
 
 	//House Render
 	//HouseA	houseAMatrix = { front, left, top };
@@ -3405,7 +3575,7 @@ void renderScene(bool renderParticles) {
 	//HouseE	houseEMatrix = { back, left, right, top };
 
 
-	/*modelHAfront.render(houseAMatrix[0]);
+	modelHAfront.render(houseAMatrix[0]);
 	modelHAleft.render(houseAMatrix[1]);
 	modelHAtop.render(houseAMatrix[2]);
 	modelHBback.render(houseBMatrix[0]);
@@ -3424,7 +3594,7 @@ void renderScene(bool renderParticles) {
 	modelHEleft.render(houseEMatrix[1]);
 	modelHEright.render(houseEMatrix[2]);
 	modelHEtop.render(houseEMatrix[3]);
-	*/
+	
 	if(isKeyCollected[0] == false)
 		keyModelAnimateA.render(modelMatrixKeyA);
 	if(isKeyCollected[1] == false)
@@ -3748,7 +3918,6 @@ void renderScene(bool renderParticles) {
 	sourceWalkPos[1] = modelMatrixPlayer[3].y;
 	sourceWalkPos[2] = modelMatrixPlayer[3].z;
 	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
-
 	glEnable(GL_CULL_FACE);
 }
 
