@@ -67,7 +67,7 @@ std::random_device device;
 std::mt19937 rng(device());
 std::uniform_int_distribution<std::mt19937::result_type> dist5(1, 5);
 
-std::string blendMapTexture = "../Textures/Proyecto/blendMap.png";
+std::string blendMapTexture = "../Textures/Proyecto/blendMap2.png";
 std::string heightMapTexture = "../Textures/Proyecto/heightMap.png";
 std::string pathTexture = "../Textures/Proyecto/environment/Path/path.jpg";
 std::string envTextures[3] = {
@@ -3390,12 +3390,12 @@ void applicationLoop() {
 
 		if (isKeyCollected[0])
 			sourcesPlay[16] = true;
-		else
-			sourcesPlay[16] = false;
+		/*else
+			sourcesPlay[16] = false;*/
 		if (isKeyCollected[1])
 			sourcesPlay[17] = true;
-		else
-			sourcesPlay[17] = false;
+		/*else
+			sourcesPlay[17] = false;*/
 
 		/*******************************************
 		 * State machines
