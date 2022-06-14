@@ -62,7 +62,12 @@ int screenHeight;
 
 const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
-std::string blendMapTexture = "../Textures/Proyecto/blendMap.png";
+//Random seed for key location
+std::random_device device;
+std::mt19937 rng(device());
+std::uniform_int_distribution<std::mt19937::result_type> dist5(1, 5);
+
+std::string blendMapTexture = "../Textures/Proyecto/blendMap2.png";
 std::string heightMapTexture = "../Textures/Proyecto/heightMap.png";
 std::string pathTexture = "../Textures/Proyecto/environment/Path/path.jpg";
 std::string envTextures[3] = {
@@ -77,6 +82,35 @@ std::string wallObjDir[6] = {
 	"../models/Walls/WallD.fbx",
 	"../models/Walls/WallE.fbx",
 	"../models/Walls/WallF.fbx"
+};
+std::string HAobjDir[3] = {
+	"../models/Houses/HA/HA-front.fbx",
+	"../models/Houses/HA/HA-left.fbx",
+	"../models/Houses/HA/HA-top.fbx"
+};
+std::string HBobjDir[5] = {
+	"../models/Houses/HB/HB-back.fbx",
+	"../models/Houses/HB/HB-front.fbx",
+	"../models/Houses/HB/HB-left1.fbx",
+	"../models/Houses/HB/HB-left2.fbx",
+	"../models/Houses/HB/HB-top.fbx"
+};
+std::string HCobjDir[3] = {
+	"../models/Houses/HC/HC-front.fbx",
+	"../models/Houses/HC/HC-left.fbx",
+	"../models/Houses/HC/HC-top.fbx"
+};
+std::string HDobjDir[4] = {
+	"../models/Houses/HD/HD-back.fbx",
+	"../models/Houses/HD/HD-left.fbx",
+	"../models/Houses/HD/HD-right.fbx",
+	"../models/Houses/HD/HD-top.fbx"
+};
+std::string HEobjDir[4] = {
+	"../models/Houses/HE/HE-back.fbx",
+	"../models/Houses/HE/HE-left.fbx",
+	"../models/Houses/HE/HE-right.fbx",
+	"../models/Houses/HE/HE-top.fbx"
 };
 
 GLFWwindow *window;
@@ -106,6 +140,9 @@ Sphere sphereCollider(10, 10);
 Box boxViewDepth;
 Box boxLightViewBox;
 
+//Rayos
+Cylinder cylinderShoot(10, 10, 0.05, 0.05);
+
 ShadowBox *shadowBox;
 
 // Models complex instances
@@ -113,6 +150,7 @@ ShadowBox *shadowBox;
 Model modelLamp1;
 Model modelLamp2;
 Model modelLampPost2;
+glm::vec3 escalamientoLampara = glm::vec3(0.5*7);
 // Hierba
 Model modelGrass;
 // Fountain
@@ -120,9 +158,26 @@ Model modelFountain;
 
 //Walls
 Model modelWallA, modelWallB, modelWallC, modelWallD, modelWallE, modelWallF;
+Model modelHAleft, modelHAfront, modelHAtop;	//3
+Model modelHBleft1, modelHBleft2, modelHBtop, modelHBfront, modelHBback;	//5
+Model modelHCleft, modelHCfront, modelHCtop;	//3
+Model modelHDleft, modelHDright, modelHDtop, modelHDback;	//4
+Model modelHEleft, modelHEright, modelHEtop, modelHEback;	//4
 // Model animate instance
 Model playerModelAnimate;
 Model zombieModelAnimate1;
+Model zombieModelAnimate2;
+Model zombieModelAnimate3;
+Model zombieModelAnimate4;
+Model zombieModelAnimate5;
+Model zombieModelAnimate6;
+Model zombieModelAnimate7;
+
+//Keys
+Model keyModelAnimateA;
+Model keyModelAnimateB;
+
+Model modelRedDoor;
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 12, heightMapTexture);
 
@@ -132,8 +187,20 @@ GLuint textureTerrainBackgroundID, textureTerrainRID, textureTerrainGID,
 GLuint textureParticleFountainID, textureParticleFireID, texId;
 GLuint skyboxTextureID;
 
+//MAIN MENU TEXTURES
+GLuint textureInit1ID, textureInit2ID, textureActivaID;
+Shader shaderTexture;
+Box boxIntro;
+bool iniciaPartida = false, presionarOpcion = false;
+bool isTryingToEscape = false;
+
+//UI Textures
+GLuint textureKeysCompleteID, textureKeyAFoundID, textureKeysEmptyID, textureKeysActivaID;
+
+
 // Modelo para el redener de texto
 FontTypeRendering::FontTypeRendering *modelText;
+FontTypeRendering::FontTypeRendering *modelText2;
 
 GLenum types[6] = {
 GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -168,13 +235,34 @@ glm::mat4 modelMatrixWallC = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallD = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallE = glm::mat4(1.0f);
 glm::mat4 modelMatrixWallF = glm::mat4(1.0f);
+//Houses
+std::vector<glm::mat4> houseAMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseBMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseCMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseDMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+std::vector<glm::mat4> houseEMatrix = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 
 glm::mat4 modelMatrixPlayer = glm::mat4(1.0f);
 glm::vec3 escalamientoPlayer = glm::vec3(0.08f);
 glm::vec3 escalamientoWalls = glm::vec3(8.0f);
 //Zombies
 glm::mat4 modelMatrixZombie1 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie2 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie3 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie4 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie5 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie6 = glm::mat4(1.0f);
+glm::mat4 modelMatrixZombie7 = glm::mat4(1.0f);
 glm::vec3 scaleZombie = glm::vec3(0.08f);
+
+//Keys
+glm::mat4 modelMatrixKeyA = glm::mat4(1.0f);
+glm::mat4 modelMatrixKeyB = glm::mat4(1.0f);
+glm::vec3 scaleKey = glm::vec3(0.08f);
+//glm::vec3 scaleKey = glm::vec3(1.0f);
+
+glm::mat4 modelMatrixRedDoor = glm::mat4(1.0f);
+glm::vec3 scaleRedDoor = glm::vec3(8.0f);
 
 /*
 * Animations Player
@@ -198,17 +286,24 @@ glm::vec3 scaleZombie = glm::vec3(0.08f);
 */
 
 int animationIndexPlayer = 0;
-int animationIndexZombie = 0;
+int animationIndexZombie1 = 0;
+int animationIndexZombie2 = 0;
+int animationIndexZombie3 = 0;
+int animationIndexZombie4 = 0;
+int animationIndexZombie5 = 0;
+int animationIndexZombie6 = 0;
+int animationIndexZombie7 = 0;
 int modelSelected = 1;
 bool enableCountSelected = true;
+bool renderEverything = true;
 
 // Lamps positions
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
 		24.41, 0, -34.57), glm::vec3(-10.15, 0, -54.10) };
 std::vector<float> lamp1Orientation = { -17.0, -82.67, 23.70 };
-std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
-		glm::vec3(-52.73, 0, -3.90) };
-std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
+//std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24), glm::vec3(-52.73, 0, -3.90) };
+std::vector<glm::vec3> lamp2Position = { glm::vec3(-82.4, 0, 0), glm::vec3(15.92, 0, -31.44), glm::vec3(-55.2, 0, 72.16), glm::vec3(13.68, 0, -55.28) };
+std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90, 23.5 + 90, -60.0 + 90 };
 
 // Blending model unsorted
 std::map<std::string, glm::vec3> blendingUnsorted = { { "aircraft", glm::vec3(
@@ -228,6 +323,41 @@ double startTimeJump = 0;
 
 //Shoot variables
 bool isShooting = false;
+double deltaTimeShoot = 0.0f, currTimeShoot = 0.0f, lastTimeShoot = 0.0f;
+
+//Zombie variables
+
+double deltaTimeShooted = 0.0f, deltaTimeDying = 0.0f;
+double currTimeShooted = 0.0f, lastTimeShooted = 0.0f;
+double currTimeDying = 0.0f, lastTimeDying = 0.0f;
+double currTimeKeys = 0.0f, lastTimeKeys = 0.0f, deltaTimeKeys = 0.0f;
+
+int zombieLife[7] = {3,3,3,3,3,3,3};
+bool isZombieShooted[7] = {false, false, false, false, false, false, false};
+bool isZombieDying[7] = { false, false, false, false, false, false, false };
+bool isZombieAlive[7] = { true, true, true, true, true, true, true };
+bool isZombieInRange[7] = { false, false, false, false, false, false, false };
+
+//Player Variables
+int vidasPlayer = 3;
+
+
+//Keys Locations
+glm::vec3 KeyAPos = glm::vec3(46.96f , 2.0f, -77.36f);
+glm::vec3 KeyBPos = glm::vec3(82.8f	 , 2.0f,  62.48f);
+glm::vec3 KeyCPos = glm::vec3(-14.88f, 2.0f, -64.48f);
+glm::vec3 KeyDPos = glm::vec3(-13.76f, 2.0f, -14.0f );
+glm::vec3 KeyEPos = glm::vec3(-23.52f, 2.0f,  39.84f);
+int keySlotSelected = 0;
+int keySlotSelectedB = 0;
+bool isKeyCollected[2] = { false, false };
+int keysFound = 0;
+
+//Rays
+glm::vec3 rayShootDirection;
+glm::vec3 rayShootOri;
+glm::vec3 rayShootTar;
+
 
 // Definition for the particle system
 GLuint initVel, startTime;
@@ -255,25 +385,83 @@ GLuint depthMap, depthMapFBO;
 
 /**********************
  * OpenAL config
+ * Sources:
+ * 0	-	Fire
+ * 1	-	Gunshot
+ * 2	-	ZombieNormal
+ * 3	-	ZombieDying
+ * 4	-	Collect Key
+ * 5	-	Player Walk
  */
 
 // OpenAL Defines
-#define NUM_BUFFERS 3
-#define NUM_SOURCES 3
+#define NUM_BUFFERS 6
+#define NUM_SOURCES 19
 #define NUM_ENVIRONMENTS 1
 // Listener
 ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
 ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
 ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
-// Source 0
+// Source 0 - Fire
 ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
 ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
-// Source 1
-ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
-// Source 2
-ALfloat source2Pos[] = { 2.0, 0.0, 0.0 };
-ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+// Source 1 - Gunshot
+ALfloat sourceGunPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceGunVel[] = { 0.0, 0.0, 0.0 };
+
+// Source 2 - Zombie 1
+ALfloat sourceZ1NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ1NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 2
+ALfloat sourceZ2NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ2NVel[] = { 0.0, 0.0,0.0 };
+// Source 4 - Zombie 3
+ALfloat sourceZ3NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ3NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 4
+ALfloat sourceZ4NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ4NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 5
+ALfloat sourceZ5NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ5NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 6
+ALfloat sourceZ6NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ6NVel[] = { 0.0, 0.0,0.0 };
+// Source 3 - Zombie 7
+ALfloat sourceZ7NPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ7NVel[] = { 0.0, 0.0,0.0 };
+
+//Source ZombieDie - Zombie 1
+ALfloat sourceZ1DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ1DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 2
+ALfloat sourceZ2DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ2DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 3
+ALfloat sourceZ3DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ3DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 4
+ALfloat sourceZ4DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ4DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 5
+ALfloat sourceZ5DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ5DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 6
+ALfloat sourceZ6DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ6DVel[] = { 0.0, 0.0,0.0 };
+//Source ZombieDie - Zombie 7
+ALfloat sourceZ7DPos[] = { 2.0, 0.0,0.0 };
+ALfloat sourceZ7DVel[] = { 0.0, 0.0,0.0 };
+
+// Source Collect Key A
+ALfloat sourceKeyAPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceKeyAVel[] = { 0.0, 0.0, 0.0 };
+// Source Collect Key B
+ALfloat sourceKeyBPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceKeyBVel[] = { 0.0, 0.0, 0.0 };
+// Source Walk
+ALfloat sourceWalkPos[] = { 2.0, 0.0, 0.0 };
+ALfloat sourceWalkVel[] = { 0.0, 0.0, 0.0 };
 // Buffers
 ALuint buffer[NUM_BUFFERS];
 ALuint source[NUM_SOURCES];
@@ -284,7 +472,9 @@ ALenum format;
 ALvoid *data;
 int ch;
 ALboolean loop;
-std::vector<bool> sourcesPlay = { true, true, true };
+//								{  0		1	  2	      3       4       5       6       7       8        9       10      11      12      13      14      15     16       17    18 };
+//								{ fire,gunshot,	 z1n,	 z2n,    z3n,    z4n,    z5n,    z6n,    z7n,     z1d,    z2d,    z3d,    z4d,    z5d,    z6d,    z7d,   keyA,   keyB,  Walk};
+std::vector<bool> sourcesPlay = { true,	false,	true,	true,	true,	true,	true,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false };
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
@@ -303,7 +493,250 @@ void renderScene(bool renderParticles = true);
 //Funciones agregadas para seccionar el desastre
 void modelMovementXboxPlayer();
 void playerMovementKeyboard();
+void stateZombieGeneral(int zN);
+void configAudioListeners();
+void openALSoundData();
 
+
+void openALSoundData() {
+	// Listener for the Third person camera
+	listenerPos[0] = modelMatrixPlayer[3].x;
+	listenerPos[1] = modelMatrixPlayer[3].y;
+	listenerPos[2] = modelMatrixPlayer[3].z;
+	alListenerfv(AL_POSITION, listenerPos);
+
+	glm::vec3 upModel = glm::normalize(modelMatrixPlayer[1]);
+	glm::vec3 frontModel = glm::normalize(modelMatrixPlayer[2]);
+
+	listenerOri[0] = frontModel.x;
+	listenerOri[1] = frontModel.y;
+	listenerOri[2] = frontModel.z;
+	listenerOri[3] = upModel.x;
+	listenerOri[4] = upModel.y;
+	listenerOri[5] = upModel.z;
+
+	// Listener for the First person camera
+	/*listenerPos[0] = camera->getPosition().x;
+	 listenerPos[1] = camera->getPosition().y;
+	 listenerPos[2] = camera->getPosition().z;
+	 alListenerfv(AL_POSITION, listenerPos);
+	 listenerOri[0] = camera->getFront().x;
+	 listenerOri[1] = camera->getFront().y;
+	 listenerOri[2] = camera->getFront().z;
+	 listenerOri[3] = camera->getUp().x;
+	 listenerOri[4] = camera->getUp().y;
+	 listenerOri[5] = camera->getUp().z;*/
+	alListenerfv(AL_ORIENTATION, listenerOri);
+
+	for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
+		if (sourcesPlay[i]) {
+			sourcesPlay[i] = false;
+			alSourcePlay(source[i]);
+		}
+	}
+}
+
+void configAudioListeners() {
+	alutInit(0, nullptr);
+	alListenerfv(AL_POSITION, listenerPos);
+	alListenerfv(AL_VELOCITY, listenerVel);
+	alListenerfv(AL_ORIENTATION, listenerOri);
+	alGetError(); // clear any error messages
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating buffers !!\n");
+		exit(1);
+	}
+	else {
+		printf("init() - No errors yet.");
+	}
+	// Config source 0
+	/* Sources:
+		* 0		- Fire
+		* 1		- Gunshot
+		* 2-8	- ZombieNormal
+		* 9-15	- ZombieDying
+		* 16-17 - Collect Key
+		* 18	- Player Walk
+	*/
+	// Generate buffers, or else no sound will happen!
+	alGenBuffers(NUM_BUFFERS, buffer);
+	buffer[0] = alutCreateBufferFromFile("../sounds/fire.wav");
+	buffer[1] = alutCreateBufferFromFile("../sounds/P226-9mm-Close-Single-Gunshot-C.wav");
+	buffer[2] = alutCreateBufferFromFile("../sounds/Zombie-Long-Attack-A5.wav");
+	buffer[3] = alutCreateBufferFromFile("../sounds/Zombie-Dying-and-Choking-A1.wav");
+	buffer[4] = alutCreateBufferFromFile("../sounds/Fast-Collection-of-coins.wav");
+	//buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-slow-pace-1.wav");
+	buffer[5] = alutCreateBufferFromFile("../sounds/sneaker-shoe-on-concrete-floor-medium-pace-1.wav");
+	int errorAlut = alutGetError();
+	if (errorAlut != ALUT_ERROR_NO_ERROR) {
+		printf("- Error open files with alut %d !!\n", errorAlut);
+		exit(2);
+	}
+
+	alGetError(); /* clear error */
+	alGenSources(NUM_SOURCES, source);
+
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating sources !!\n");
+		exit(2);
+	}
+	else {
+		printf("init - no errors after alGenSources\n");
+	}
+	//Fire
+	alSourcef(source[0], AL_PITCH, 1.0f);
+	alSourcef(source[0], AL_GAIN, 3.0f);
+	alSourcefv(source[0], AL_POSITION, source0Pos);
+	alSourcefv(source[0], AL_VELOCITY, source0Vel);
+	alSourcei(source[0], AL_BUFFER, buffer[0]);
+	alSourcei(source[0], AL_LOOPING, AL_TRUE);
+	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
+	//Gunshot
+	alSourcef(source[1], AL_PITCH, 1.0f);
+	alSourcef(source[1], AL_GAIN, 3.0f);
+	alSourcefv(source[1], AL_POSITION, sourceGunPos);
+	alSourcefv(source[1], AL_VELOCITY, sourceGunVel);
+	alSourcei(source[1], AL_BUFFER, buffer[1]);
+	alSourcei(source[1], AL_LOOPING, AL_FALSE);
+	alSourcef(source[1], AL_MAX_DISTANCE, 200);
+
+	//ZombieNormal - 1
+	alSourcef(source[2], AL_PITCH, 1.0f);
+	alSourcef(source[2], AL_GAIN, 0.3f);
+	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
+	alSourcefv(source[2], AL_VELOCITY, sourceZ1NVel);
+	alSourcei(source[2], AL_BUFFER, buffer[2]);
+	alSourcei(source[2], AL_LOOPING, AL_TRUE);
+	alSourcef(source[2], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 2
+	alSourcef(source[3], AL_PITCH, 1.0f);
+	alSourcef(source[3], AL_GAIN, 0.3f);
+	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
+	alSourcefv(source[3], AL_VELOCITY, sourceZ2NVel);
+	alSourcei(source[3], AL_BUFFER, buffer[2]);
+	alSourcei(source[3], AL_LOOPING, AL_TRUE);
+	alSourcef(source[3], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 3
+	alSourcef(source[4], AL_PITCH, 1.0f);
+	alSourcef(source[4], AL_GAIN, 0.3f);
+	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
+	alSourcefv(source[4], AL_VELOCITY, sourceZ3NVel);
+	alSourcei(source[4], AL_BUFFER, buffer[2]);
+	alSourcei(source[4], AL_LOOPING, AL_TRUE);
+	alSourcef(source[4], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 4
+	alSourcef(source[5], AL_PITCH, 1.0f);
+	alSourcef(source[5], AL_GAIN, 0.3f);
+	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
+	alSourcefv(source[5], AL_VELOCITY, sourceZ4NVel);
+	alSourcei(source[5], AL_BUFFER, buffer[2]);
+	alSourcei(source[5], AL_LOOPING, AL_TRUE);
+	alSourcef(source[5], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 5
+	alSourcef(source[6], AL_PITCH, 1.0f);
+	alSourcef(source[6], AL_GAIN, 0.3f);
+	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
+	alSourcefv(source[6], AL_VELOCITY, sourceZ5NVel);
+	alSourcei(source[6], AL_BUFFER, buffer[2]);
+	alSourcei(source[6], AL_LOOPING, AL_TRUE);
+	alSourcef(source[6], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 6
+	alSourcef(source[7], AL_PITCH, 1.0f);
+	alSourcef(source[7], AL_GAIN, 0.3f);
+	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
+	alSourcefv(source[7], AL_VELOCITY, sourceZ6NVel);
+	alSourcei(source[7], AL_BUFFER, buffer[2]);
+	alSourcei(source[7], AL_LOOPING, AL_TRUE);
+	alSourcef(source[7], AL_MAX_DISTANCE, 1000);
+	//ZombieNormal - 7
+	alSourcef(source[8], AL_PITCH, 1.0f);
+	alSourcef(source[8], AL_GAIN, 0.3f);
+	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
+	alSourcefv(source[8], AL_VELOCITY, sourceZ7NVel);
+	alSourcei(source[8], AL_BUFFER, buffer[2]);
+	alSourcei(source[8], AL_LOOPING, AL_TRUE);
+	alSourcef(source[8], AL_MAX_DISTANCE, 1000);
+	//ZombieDie - 1
+	alSourcef(source[9], AL_PITCH, 1.0f);
+	alSourcef(source[9], AL_GAIN, 0.3f);
+	alSourcefv(source[9], AL_POSITION, sourceZ1DPos);
+	alSourcefv(source[9], AL_VELOCITY, sourceZ1DVel);
+	alSourcei(source[9], AL_BUFFER, buffer[3]);
+	alSourcei(source[9], AL_LOOPING, AL_FALSE);
+	alSourcef(source[9], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 2
+	alSourcef(source[10], AL_PITCH, 1.0f);
+	alSourcef(source[10], AL_GAIN, 0.3f);
+	alSourcefv(source[10], AL_POSITION, sourceZ2DPos);
+	alSourcefv(source[10], AL_VELOCITY, sourceZ2DVel);
+	alSourcei(source[10], AL_BUFFER, buffer[3]);
+	alSourcei(source[10], AL_LOOPING, AL_FALSE);
+	alSourcef(source[10], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 3
+	alSourcef(source[11], AL_PITCH, 1.0f);
+	alSourcef(source[11], AL_GAIN, 0.3f);
+	alSourcefv(source[11], AL_POSITION, sourceZ3DPos);
+	alSourcefv(source[11], AL_VELOCITY, sourceZ3DVel);
+	alSourcei(source[11], AL_BUFFER, buffer[3]);
+	alSourcei(source[11], AL_LOOPING, AL_FALSE);
+	alSourcef(source[11], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 4
+	alSourcef(source[12], AL_PITCH, 1.0f);
+	alSourcef(source[12], AL_GAIN, 0.3f);
+	alSourcefv(source[12], AL_POSITION, sourceZ4DPos);
+	alSourcefv(source[12], AL_VELOCITY, sourceZ4DVel);
+	alSourcei(source[12], AL_BUFFER, buffer[3]);
+	alSourcei(source[12], AL_LOOPING, AL_FALSE);
+	alSourcef(source[12], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 5
+	alSourcef(source[13], AL_PITCH, 1.0f);
+	alSourcef(source[13], AL_GAIN, 0.3f);
+	alSourcefv(source[13], AL_POSITION, sourceZ5DPos);
+	alSourcefv(source[13], AL_VELOCITY, sourceZ5DVel);
+	alSourcei(source[13], AL_BUFFER, buffer[3]);
+	alSourcei(source[13], AL_LOOPING, AL_FALSE);
+	alSourcef(source[13], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 6
+	alSourcef(source[14], AL_PITCH, 1.0f);
+	alSourcef(source[14], AL_GAIN, 0.3f);
+	alSourcefv(source[14], AL_POSITION, sourceZ6DPos);
+	alSourcefv(source[14], AL_VELOCITY, sourceZ6DVel);
+	alSourcei(source[14], AL_BUFFER, buffer[3]);
+	alSourcei(source[14], AL_LOOPING, AL_FALSE);
+	alSourcef(source[14], AL_MAX_DISTANCE, 1100);
+	//ZombieDie - 7
+	alSourcef(source[15], AL_PITCH, 1.0f);
+	alSourcef(source[15], AL_GAIN, 0.3f);
+	alSourcefv(source[15], AL_POSITION, sourceZ7DPos);
+	alSourcefv(source[15], AL_VELOCITY, sourceZ7DVel);
+	alSourcei(source[15], AL_BUFFER, buffer[3]);
+	alSourcei(source[15], AL_LOOPING, AL_FALSE);
+	alSourcef(source[15], AL_MAX_DISTANCE, 1100);
+	//Collect Key A
+	alSourcef(source[16], AL_PITCH, 1.0f);
+	alSourcef(source[16], AL_GAIN, 0.3f);
+	alSourcefv(source[16], AL_POSITION, sourceKeyAPos);
+	alSourcefv(source[16], AL_VELOCITY, sourceKeyAVel);
+	alSourcei(source[16], AL_BUFFER, buffer[4]);
+	alSourcei(source[16], AL_LOOPING, AL_FALSE);
+	alSourcef(source[16], AL_MAX_DISTANCE, 1100);
+	//Collect Key B
+	alSourcef(source[17], AL_PITCH, 1.0f);
+	alSourcef(source[17], AL_GAIN, 0.3f);
+	alSourcefv(source[17], AL_POSITION, sourceKeyBPos);
+	alSourcefv(source[17], AL_VELOCITY, sourceKeyBVel);
+	alSourcei(source[17], AL_BUFFER, buffer[4]);
+	alSourcei(source[17], AL_LOOPING, AL_FALSE);
+	alSourcef(source[17], AL_MAX_DISTANCE, 1100);
+	//Walk
+	alSourcef(source[18], AL_PITCH, 1.0f);
+	alSourcef(source[18], AL_GAIN, 0.5f);
+	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
+	alSourcefv(source[18], AL_VELOCITY, sourceWalkVel);
+	alSourcei(source[18], AL_BUFFER, buffer[5]);
+	alSourcei(source[18], AL_LOOPING, AL_TRUE);
+	alSourcef(source[18], AL_MAX_DISTANCE, 300);
+}
 
 void initParticleBuffers() {
 	// Generate the buffers
@@ -529,6 +962,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 			"../Shaders/texturizado_depth_view.fs");
 	shaderDepth.initialize("../Shaders/shadow_mapping_depth.vs",
 			"../Shaders/shadow_mapping_depth.fs");
+	shaderTexture.initialize("../Shaders/texturizado.vs", "../Shaders/texturizado.fs");
 
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
@@ -549,9 +983,18 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	boxLightViewBox.init();
 	boxLightViewBox.setShader(&shaderViewDepth);
 
+	boxIntro.init();
+	boxIntro.setShader(&shaderTexture);
+	boxIntro.setScale(glm::vec3(2.0, 2.0, 1.0));
+
 	terrain.init();
 	terrain.setShader(&shaderTerrain);
 	terrain.setPosition(glm::vec3(100, 0, 100));
+
+	//Rayos
+	cylinderShoot.init();
+	cylinderShoot.setShader(&shader);
+	cylinderShoot.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
 
 	//Lamp models
 	modelLamp1.loadModel("../models/Street-Lamp-Black/objLamp.obj");
@@ -583,6 +1026,50 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	modelWallF.loadModel(wallObjDir[5]);
 	modelWallF.setShader(&shaderMulLighting);
 
+	//Houses
+	modelHAfront.loadModel(HAobjDir[0]);
+	modelHAfront.setShader(&shaderMulLighting);
+	modelHAleft.loadModel(HAobjDir[1]);
+	modelHAleft.setShader(&shaderMulLighting);
+	modelHAtop.loadModel(HAobjDir[2]);
+	modelHAtop.setShader(&shaderMulLighting);
+
+	modelHBback.loadModel(HBobjDir[0]);
+	modelHBback.setShader(&shaderMulLighting);
+	modelHBfront.loadModel(HBobjDir[1]);
+	modelHBfront.setShader(&shaderMulLighting);
+	modelHBleft1.loadModel(HBobjDir[2]);
+	modelHBleft1.setShader(&shaderMulLighting);
+	modelHBleft2.loadModel(HBobjDir[3]);
+	modelHBleft2.setShader(&shaderMulLighting);
+	modelHBtop.loadModel(HBobjDir[4]);
+	modelHBtop.setShader(&shaderMulLighting);
+
+	modelHCfront.loadModel(HCobjDir[0]);
+	modelHCfront.setShader(&shaderMulLighting);
+	modelHCleft.loadModel(HCobjDir[1]);
+	modelHCleft.setShader(&shaderMulLighting);
+	modelHCtop.loadModel(HCobjDir[2]);
+	modelHCtop.setShader(&shaderMulLighting);
+
+	modelHDback.loadModel(HDobjDir[0]);
+	modelHDback.setShader(&shaderMulLighting);
+	modelHDleft.loadModel(HDobjDir[1]);
+	modelHDleft.setShader(&shaderMulLighting);
+	modelHDright.loadModel(HDobjDir[2]);
+	modelHDright.setShader(&shaderMulLighting);
+	modelHDtop.loadModel(HDobjDir[3]);
+	modelHDtop.setShader(&shaderMulLighting);
+
+	modelHEback.loadModel(HEobjDir[0]);
+	modelHEback.setShader(&shaderMulLighting);
+	modelHEleft.loadModel(HEobjDir[1]);
+	modelHEleft.setShader(&shaderMulLighting);
+	modelHEright.loadModel(HEobjDir[2]);
+	modelHEright.setShader(&shaderMulLighting);
+	modelHEtop.loadModel(HEobjDir[3]);
+	modelHEtop.setShader(&shaderMulLighting);
+
 	//Player
 	playerModelAnimate.loadModel("../models/Player/PlayerMixamo.fbx");
 	playerModelAnimate.setShader(&shaderMulLighting);
@@ -590,6 +1077,31 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Zombies
 	zombieModelAnimate1.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
 	zombieModelAnimate1.setShader(&shaderMulLighting);
+	zombieModelAnimate2.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate2.setShader(&shaderMulLighting);
+	zombieModelAnimate3.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate3.setShader(&shaderMulLighting);
+	zombieModelAnimate4.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate4.setShader(&shaderMulLighting);
+	zombieModelAnimate5.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate5.setShader(&shaderMulLighting);
+	zombieModelAnimate6.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate6.setShader(&shaderMulLighting);
+	zombieModelAnimate7.loadModel("../models/ZombieGirl/ZombieGirl.fbx");
+	zombieModelAnimate7.setShader(&shaderMulLighting);
+
+	//Keys
+	keyModelAnimateA.loadModel("../models/Key/Key.fbx");
+	keyModelAnimateA.setShader(&shaderMulLighting);
+	keyModelAnimateA.setAnimationIndex(0);
+
+	keyModelAnimateB.loadModel("../models/Key/Key.fbx");
+	keyModelAnimateB.setShader(&shaderMulLighting);
+	keyModelAnimateB.setAnimationIndex(0);
+
+	//Door
+	modelRedDoor.loadModel("../models/Door/door.fbx");
+	modelRedDoor.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -854,6 +1366,107 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		std::cout << "Failed to load texture" << std::endl;
 	textureParticleFire.freeImage(bitmap);
 
+	//Texturas Main Screen
+	Texture textureIntro1("../Textures/mainMenuIniciar.png");
+	bitmap = textureIntro1.loadImage();
+	data = textureIntro1.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureInit1ID);
+	glBindTexture(GL_TEXTURE_2D, textureInit1ID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureIntro1.freeImage(bitmap);
+
+	Texture textureIntro2("../Textures/mainMenuSalir.png");
+	bitmap = textureIntro2.loadImage();
+	data = textureIntro2.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureInit2ID);
+	glBindTexture(GL_TEXTURE_2D, textureInit2ID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureIntro2.freeImage(bitmap);
+
+	Texture textureKeyEmpty("../Textures/UI_empty.png");
+	bitmap = textureKeyEmpty.loadImage();
+	data = textureKeyEmpty.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeysEmptyID);
+	glBindTexture(GL_TEXTURE_2D, textureKeysEmptyID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyEmpty.freeImage(bitmap);
+
+	Texture textureKeyComplete("../Textures/UI_complete.png");
+	bitmap = textureKeyComplete.loadImage();
+	data = textureKeyComplete.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeysCompleteID);
+	glBindTexture(GL_TEXTURE_2D, textureKeysCompleteID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyComplete.freeImage(bitmap);
+
+	Texture textureKeyAFound("../Textures/UI_Afound.png");
+	bitmap = textureKeyAFound.loadImage();
+	data = textureKeyAFound.convertToData(bitmap, imageWidth, imageHeight);
+	glGenTextures(1, &textureKeyAFoundID);
+	glBindTexture(GL_TEXTURE_2D, textureKeyAFoundID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0,
+			GL_BGRA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	textureKeyAFound.freeImage(bitmap);
+
 	std::uniform_real_distribution<float> distr01 =
 			std::uniform_real_distribution<float>(0.0f, 1.0f);
 	std::mt19937 generator;
@@ -934,66 +1547,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	/*******************************************
 	 * OpenAL init
 	 *******************************************/
-	alutInit(0, nullptr);
-	alListenerfv(AL_POSITION, listenerPos);
-	alListenerfv(AL_VELOCITY, listenerVel);
-	alListenerfv(AL_ORIENTATION, listenerOri);
-	alGetError(); // clear any error messages
-	if (alGetError() != AL_NO_ERROR) {
-		printf("- Error creating buffers !!\n");
-		exit(1);
-	} else {
-		printf("init() - No errors yet.");
-	}
-	// Config source 0
-	// Generate buffers, or else no sound will happen!
-	alGenBuffers(NUM_BUFFERS, buffer);
-	buffer[0] = alutCreateBufferFromFile("../sounds/fountain.wav");
-	buffer[1] = alutCreateBufferFromFile("../sounds/fire.wav");
-	buffer[2] = alutCreateBufferFromFile("../sounds/darth_vader.wav");
-	int errorAlut = alutGetError();
-	if (errorAlut != ALUT_ERROR_NO_ERROR) {
-		printf("- Error open files with alut %d !!\n", errorAlut);
-		exit(2);
-	}
-
-	alGetError(); /* clear error */
-	alGenSources(NUM_SOURCES, source);
-
-	if (alGetError() != AL_NO_ERROR) {
-		printf("- Error creating sources !!\n");
-		exit(2);
-	} else {
-		printf("init - no errors after alGenSources\n");
-	}
-	alSourcef(source[0], AL_PITCH, 1.0f);
-	alSourcef(source[0], AL_GAIN, 3.0f);
-	alSourcefv(source[0], AL_POSITION, source0Pos);
-	alSourcefv(source[0], AL_VELOCITY, source0Vel);
-	alSourcei(source[0], AL_BUFFER, buffer[0]);
-	alSourcei(source[0], AL_LOOPING, AL_TRUE);
-	alSourcef(source[0], AL_MAX_DISTANCE, 2000);
-
-	alSourcef(source[1], AL_PITCH, 1.0f);
-	alSourcef(source[1], AL_GAIN, 3.0f);
-	alSourcefv(source[1], AL_POSITION, source1Pos);
-	alSourcefv(source[1], AL_VELOCITY, source1Vel);
-	alSourcei(source[1], AL_BUFFER, buffer[1]);
-	alSourcei(source[1], AL_LOOPING, AL_TRUE);
-	alSourcef(source[1], AL_MAX_DISTANCE, 2000);
-
-	alSourcef(source[2], AL_PITCH, 1.0f);
-	alSourcef(source[2], AL_GAIN, 0.3f);
-	alSourcefv(source[2], AL_POSITION, source2Pos);
-	alSourcefv(source[2], AL_VELOCITY, source2Vel);
-	alSourcei(source[2], AL_BUFFER, buffer[2]);
-	alSourcei(source[2], AL_LOOPING, AL_TRUE);
-	alSourcef(source[2], AL_MAX_DISTANCE, 500);
+	configAudioListeners();
 
 	// Se inicializa el modelo de texeles.
 	modelText = new FontTypeRendering::FontTypeRendering(screenWidth,
 			screenHeight);
 	modelText->Initialize();
+	modelText2 = new FontTypeRendering::FontTypeRendering(screenWidth,
+		screenHeight);
+	modelText2->Initialize();
 }
 
 void destroy() {
@@ -1017,6 +1579,8 @@ void destroy() {
 	boxViewDepth.destroy();
 	boxLightViewBox.destroy();
 
+	cylinderShoot.destroy();
+
 	// Terrains objects Delete
 	terrain.destroy();
 
@@ -1033,10 +1597,40 @@ void destroy() {
 	modelWallE.destroy();
 	modelWallF.destroy();
 
+	modelHAfront.destroy();
+	modelHAleft.destroy();
+	modelHAtop.destroy();
+	modelHBback.destroy();
+	modelHBfront.destroy();
+	modelHBleft1.destroy();
+	modelHBleft2.destroy();
+	modelHBtop.destroy();
+	modelHCfront.destroy();
+	modelHCleft.destroy();
+	modelHCtop.destroy();
+	modelHDback.destroy();
+	modelHDleft.destroy();
+	modelHDright.destroy();
+	modelHDtop.destroy();
+	modelHEback.destroy();
+	modelHEleft.destroy();
+	modelHEright.destroy();
+	modelHEtop.destroy();
+
 	// Custom objects animate
 	playerModelAnimate.destroy();
 	//Zombies
 	zombieModelAnimate1.destroy();
+	zombieModelAnimate2.destroy();
+	zombieModelAnimate3.destroy();
+	zombieModelAnimate4.destroy();
+	zombieModelAnimate5.destroy();
+	zombieModelAnimate6.destroy();
+	zombieModelAnimate7.destroy();
+
+	keyModelAnimateA.destroy();
+	keyModelAnimateB.destroy();
+	modelRedDoor.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -1135,120 +1729,207 @@ void modelMovementXboxPlayer() {
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCout);
 		const unsigned char* botones = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
 		float moveSpeed = 0.3f, rotationSpeed = 0.8f;
-		//Xbox 360 
+		
+		if (!iniciaPartida) {
+			if (textureActivaID == textureInit1ID && botones[7] == GLFW_PRESS) {
+				iniciaPartida = true;
+			}
+			if (textureActivaID == textureInit2ID && botones[7] == GLFW_PRESS) {
+				exitApp = true;
+			}
 
-		//0.2 es un umbral de movimiento 
-		// CONTROL MOVIMIENTO LS 
-
-		if (fabs(axes[1]) > 0.2) {
-			//en el codigo del profe, es -axes[1] pero en ese caso, estan invertidos los controles del joystick. Presionar hacia arriba en el joystick es ir hacia atrás, etc. 
-			modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0, 0.0, -axes[1] * moveSpeed));
-		}
-		if (axes[1] > 0.2) {
-			animationIndexPlayer = 1;
-		}
-		else if (axes[1] < -0.2)
-			animationIndexPlayer = 2;
-
-		if (fabs(axes[0]) > 0.2) {
-			modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * rotationSpeed), glm::vec3(0.0, 1.0, 0.0));
-			animationIndexPlayer = 1;
-		}
-
-		// CONTROL CAMARA RS 
-		if (fabs(axes[2]) > 0.2) {
-			camera->mouseMoveCamera(axes[2], 0, deltaTime);
-		}
-		if (fabs(axes[3]) > 0.2) {
-			camera->mouseMoveCamera(0, axes[3], deltaTime);
-		}
-
-		//Shooting
-		if (!isShooting) {
-			if (axes[5] > 0.5) {
-				isShooting = true;
-				animationIndexPlayer = 6;
-				glfwSetTime(0.0f);
-				std::cout << "Time : " << glfwGetTime() << std::endl;
+			if (!presionarOpcion && (botones[10] == GLFW_PRESS || botones[12] == GLFW_PRESS)) {
+				presionarOpcion = true;
+				if (textureActivaID == textureInit1ID)
+					textureActivaID = textureInit2ID;
+				else if (textureActivaID == textureInit2ID)
+					textureActivaID = textureInit1ID;
+			}
+			else if (botones[10] == GLFW_RELEASE && botones[12] == GLFW_RELEASE) {
+				presionarOpcion = false;
 			}
 		}
-		else{
-			std::cout << "Time !: " << glfwGetTime() << std::endl;
+		else {
+			//Xbox 360 
 
-			//if (glfwGetTime() > 1 * (38.0/60.0)) {
-			if (glfwGetTime() > 0.7) {
-				isShooting = false;
+			//0.2 es un umbral de movimiento 
+			// CONTROL MOVIMIENTO LS 
+			if (fabs(axes[1]) > 0.2) {
+				//en el codigo del profe, es -axes[1] pero en ese caso, estan invertidos los controles del joystick. Presionar hacia arriba en el joystick es ir hacia atrás, etc. 
+				modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0.0, 0.0, -axes[1] * moveSpeed));
 			}
-		}
-		/*std::cout << "L2 : " << axes[4] << std::endl;
-		std::cout << "R2 : " << axes[5] << std::endl;*/
-		// CONTROL BOTONES 
-		/*
-		* XBOX 360
-		* 0		->		A
-		* 1		->		B
-		* 2		->		X
-		* 3		->		Y
-		* 4		->		L1
-		* 5		->		R1
-		* 6		->		Select
-		* 7		->		Start
-		* 8		->		L3
-		* 9		->		R3
-		* 10	->		PadUp
-		* 11	->		PadR
-		* 12	->		PadDown
-		* 13	->		PadL
-		*/
-		if (botones[0] == GLFW_PRESS && !isJumpPlayer) {
-			std::cout << "Se presiona A y saltamos" << buttonCount << std::endl;
-			isJumpPlayer = true;
-			startTimeJump = currTime;
-			tmv = 0;
-		}
+			if (axes[1] > 0.2) {
+				animationIndexPlayer = 1;
+			}
+			else if (axes[1] < -0.2)
+				animationIndexPlayer = 2;
 
-		if (botones[6] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 6 " << buttonCount << std::endl;
-		}
-		if (botones[7] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 7 " << buttonCount << std::endl;
-		}
-		if (botones[8] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 8" << buttonCount << std::endl;
-		}
-		if (botones[9] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 9" << buttonCount << std::endl;
-		}
-		if (botones[10] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 10" << buttonCount << std::endl;
-		}
-		if (botones[11] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 11" << buttonCount << std::endl;
-		}
-		if (botones[12] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 12" << buttonCount << std::endl;
-		}
-		if (botones[13] == GLFW_PRESS) {
-			std::cout << "Se presiono boton 13" << buttonCount << std::endl;
+			if (fabs(axes[0]) > 0.2) {
+				modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-axes[0] * rotationSpeed), glm::vec3(0.0, 1.0, 0.0));
+				animationIndexPlayer = 1;
+			}
+
+			// CONTROL CAMARA RS 
+			if (fabs(axes[2]) > 0.2) {
+				camera->mouseMoveCamera(axes[2], 0, deltaTime);
+			}
+			if (fabs(axes[3]) > 0.2) {
+				camera->mouseMoveCamera(0, axes[3], deltaTime);
+			}
+
+			//Shooting
+			if (!isShooting) {
+				if (axes[5] > 0.5) {
+					isShooting = true;
+					animationIndexPlayer = 6;
+					//glfwSetTime(0.0f);
+					currTimeShoot = glfwGetTime();
+					deltaTimeShoot = 0.0f;
+					lastTimeShoot = glfwGetTime();
+				}
+			}
+			else{
+				//Gunshot
+				sourceGunPos[0] = modelMatrixPlayer[3].x;
+				sourceGunPos[1] = modelMatrixPlayer[3].y;
+				sourceGunPos[2] = modelMatrixPlayer[3].z;
+				alSourcefv(source[1], AL_POSITION, sourceGunPos);
+				currTimeShoot = glfwGetTime();
+				deltaTimeShoot += currTimeShoot - lastTimeShoot;
+				lastTimeShoot = currTimeShoot;
+				if (deltaTimeShoot > 0.7) {
+					isShooting = false;
+					currTimeShoot = glfwGetTime();
+					deltaTimeShoot = 0.0f;
+					lastTimeShoot = glfwGetTime();
+				}
+			}
+			/*std::cout << "L2 : " << axes[4] << std::endl;
+			std::cout << "R2 : " << axes[5] << std::endl;*/
+			// CONTROL BOTONES 
+			/*
+			* XBOX 360
+			* 0		->		A
+			* 1		->		B
+			* 2		->		X
+			* 3		->		Y
+			* 4		->		L1
+			* 5		->		R1
+			* 6		->		Select
+			* 7		->		Start
+			* 8		->		L3
+			* 9		->		R3
+			* 10	->		PadUp
+			* 11	->		PadR
+			* 12	->		PadDown
+			* 13	->		PadL
+			*/
+		
+
+			if (botones[0] == GLFW_PRESS && !isJumpPlayer) {
+				std::cout << "Se presiona A y saltamos" << buttonCount << std::endl;
+				isJumpPlayer = true;
+				startTimeJump = currTime;
+				tmv = 0;
+			}
+
+			if (botones[6] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 6 " << buttonCount << std::endl;
+			}
+			if (botones[7] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 7 " << buttonCount << std::endl;
+			}
+			if (botones[8] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 8" << buttonCount << std::endl;
+			}
+			if (botones[9] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 9" << buttonCount << std::endl;
+			}
+			if (botones[10] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 10" << buttonCount << std::endl;
+			}
+			if (botones[11] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 11" << buttonCount << std::endl;
+			}
+			if (botones[12] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 12" << buttonCount << std::endl;
+			}
+			if (botones[13] == GLFW_PRESS) {
+				std::cout << "Se presiono boton 13" << buttonCount << std::endl;
+			}
+			//select + start + L1 + R2 => salir de la app
+			if (botones[6] == GLFW_PRESS && botones[7] == GLFW_PRESS && botones[4] == GLFW_PRESS && botones[5] == GLFW_PRESS)
+				exitApp = true;
 		}
 	}
 }
 
 void playerMovementKeyboard() {
-
+	//Rotate left
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(1.0f * 0.8f), glm::vec3(0, 1, 0));
+		animationIndexPlayer = 0;
+	}
+	//Rotate right
+	else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::rotate(modelMatrixPlayer, glm::radians(-1.0f * 0.8f), glm::vec3(0, 1, 0));
+		animationIndexPlayer = 0;
+	}
+	//Move forward
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) {
+		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, -0.3));
+		animationIndexPlayer = 1;
+	}
+	//Move backwards
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		modelMatrixPlayer = glm::translate(modelMatrixPlayer, glm::vec3(0, 0, 0.3));
+		animationIndexPlayer = 2;
+	}
+	//Shoot
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		if (!isShooting) {
+			isShooting = true;
+			animationIndexPlayer = 6;
+			glfwSetTime(0.0f);
+		}
+		else {
+			std::cout << "Time !: " << glfwGetTime() << std::endl;
+			if (glfwGetTime() > 0.7)
+				isShooting = false;
+		}
+	}
 }
+
 bool processInput(bool continueApplication) {
 	if (exitApp || glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
 
+	if (!iniciaPartida) {
+		bool presionarEnter = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
+		if (textureActivaID == textureInit1ID && presionarEnter) {
+			iniciaPartida = true;
+		}
+		if (textureActivaID == textureInit2ID && presionarEnter) {
+			exitApp = true;
+		}
+		if (!presionarOpcion && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+			presionarOpcion = true;
+			if (textureActivaID == textureInit1ID)
+				textureActivaID = textureInit2ID;
+			else if (textureActivaID == textureInit2ID)
+				textureActivaID = textureInit1ID;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+			presionarOpcion = false;
+		}
+	}
+
+	bool isJoystickPresent = false;
+
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1) == GL_TRUE) {
 		//std::cout << "Esta presente el joystick" << std::endl;
-		int axesCount, buttonCount;
-		const unsigned char *buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1,
-				&buttonCount);
-		if (buttons[6] == GLFW_PRESS && buttons[7] == GLFW_PRESS && buttons[4] == GLFW_PRESS && buttons[5] == GLFW_PRESS)
-			exitApp = true;
+		isJoystickPresent = true;
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -1259,42 +1940,19 @@ bool processInput(bool continueApplication) {
 	offsetY = 0;
 
 	// Seleccionar modelo
-	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
-		enableCountSelected = false;
-		modelSelected++;
-		if (modelSelected > 2)
-			modelSelected = 0;
-		if (modelSelected == 1)
-			//fileName = "../animaciones/animation_dart_joints.txt";
-		if (modelSelected == 2)
-			//fileName = "../animaciones/animation_dart.txt";
-		std::cout << "modelSelected:" << modelSelected << std::endl;
-	} else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-		enableCountSelected = true;
-
+	//if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+	//	enableCountSelected = false;
+	//	modelSelected++;
+	//	if (modelSelected > 2)
+	//		modelSelected = 0;
+	//	if (modelSelected == 1)
+	//		//fileName = "../animaciones/animation_dart_joints.txt";
+	//	if (modelSelected == 2)
+	//		//fileName = "../animaciones/animation_dart.txt";
+	//	std::cout << "modelSelected:" << modelSelected << std::endl;
+	//} else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+	//	enableCountSelected = true;
 	
-
-	/*if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(1.0f),
-				glm::vec3(0, 1, 0));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-1.0f),
-				glm::vec3(0, 1, 0));
-		animationIndex = 0;
-	}
-	if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, 0.02));
-		animationIndex = 0;
-	} else if (modelSelected
-			== 2&& glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		modelMatrixMayow = glm::translate(modelMatrixMayow,
-				glm::vec3(0, 0, -0.02));
-		animationIndex = 0;
-	}*/
-
 	bool keySpaceStatus = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	if(!isJumpPlayer && keySpaceStatus){
 		isJumpPlayer = true;
@@ -1303,11 +1961,194 @@ bool processInput(bool continueApplication) {
 	}
 
 	playerMovementKeyboard();
-	modelMovementXboxPlayer();
+	if(isJoystickPresent)
+		modelMovementXboxPlayer();
 
 	glfwPollEvents();
 	return continueApplication;
 }
+
+void stateZombieGeneral(int zN) {
+	//zN zombieNumber
+	//Caminar si rayo colisiona con player
+	float zombieSpeed[7] = {1,1,1,1,1,1,1};
+	if (isZombieInRange[zN] && isZombieAlive[zN] && !isZombieShooted[zN]) {
+		switch (zN) {
+		case 0: animationIndexZombie1 = 1;
+			break;
+		case 1: animationIndexZombie2 = 1;
+			break;
+		case 2: animationIndexZombie3 = 1;
+			break;
+		case 3: animationIndexZombie4 = 1;
+			break;
+		case 4: animationIndexZombie5 = 1;
+			break;
+		case 5: animationIndexZombie6 = 1;
+			break;
+		case 6: animationIndexZombie7 = 1;
+			break;
+		}
+
+		if (zombieLife[zN] == 3)
+			zombieSpeed[zN] = 1;
+		else if (zombieLife[zN] == 2)
+			zombieSpeed[zN] = 2.0;
+		else
+			zombieSpeed[zN] = 3.5;
+		if (zombieLife[zN] == 0) {
+			switch (zN) {
+			case 1:
+				modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0));
+				break;
+			case 2: 
+				modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(0, 0, 0));
+				break;
+			case 3: 
+				modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(0, 0, 0));
+				break;
+			case 4: 
+				modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(0, 0, 0));
+				break;
+			case 5: 
+				modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(0, 0, 0));
+				break;
+			case 6: 
+				modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(0, 0, 0));
+				break;
+			case 7: 
+				modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(0, 0, 0));
+				break;
+			}
+
+
+		}
+		else {
+			switch (zN) {
+			case 0: modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 1: modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(-0.1f * zombieSpeed[zN], 0, 0));
+				break;
+			case 2: modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(0, 0, -0.1f * zombieSpeed[zN]));
+				break;
+			case 3: modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 4: modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(-0.1f * zombieSpeed[zN], 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 5: modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			case 6: modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(0, 0, 0.1f * zombieSpeed[zN]));
+				break;
+			}
+		}
+			
+	}
+
+	//Animacion si el zombie ha sido disparado
+	if (isZombieShooted[zN] == true && isZombieAlive[zN] == true && zombieLife[zN] > 0) {
+		currTimeShooted = glfwGetTime();
+		deltaTimeShooted += currTimeShooted - lastTimeShooted;
+		lastTimeShooted = currTimeShooted;
+		//Se supone que es 1 segundo por cantidad de frames que dura en blender / 60 fps
+		if (deltaTimeShooted < 1 * (62.0 / 60.0)) {
+			switch (zN) {
+			case 0: animationIndexZombie1 = 4;
+				break;
+			case 1: animationIndexZombie2 = 4;
+				break;
+			case 2: animationIndexZombie3 = 4;
+				break;
+			case 3: animationIndexZombie4 = 4;
+				break;
+			case 4: animationIndexZombie5 = 4;
+				break;
+			case 5: animationIndexZombie6 = 4;
+				break;
+			case 6: animationIndexZombie7 = 4;
+				break;
+			}
+		}
+		else {
+			isZombieShooted[zN] = false;
+			zombieLife[zN]--;
+			currTimeShooted = glfwGetTime();
+			lastTimeShooted = glfwGetTime();
+			deltaTimeShooted = 0;
+			if (zombieLife[zN] <= 0) {
+				currTimeDying = glfwGetTime();
+				deltaTimeDying = 0;
+				lastTimeDying = glfwGetTime();
+				isZombieDying[zN] = true;
+			}
+		}
+	}
+
+	//Animacion si zombie ya no tiene vida
+	if (isZombieDying[zN] == true && isZombieAlive[zN] == true) {
+		zombieSpeed[zN] = 0;
+
+		currTimeDying = glfwGetTime();
+		deltaTimeDying += currTimeDying - lastTimeDying;
+		lastTimeDying = currTimeDying;
+		if (deltaTimeDying <= 1 * (101.0 / 60.0)) {
+			switch (zN) {
+			case 0: animationIndexZombie1 = 2;
+				break;
+			case 1: animationIndexZombie2 = 2;
+				break;
+			case 2: animationIndexZombie3 = 2;
+				break;
+			case 3: animationIndexZombie4 = 2;
+				break;
+			case 4: animationIndexZombie5 = 2;
+				break;
+			case 5: animationIndexZombie6 = 2;
+				break;
+			case 6: animationIndexZombie7 = 2;
+				break;
+			}
+		}
+		else {
+			isZombieDying[zN] = false;
+			isZombieAlive[zN] = false;
+			currTimeDying = glfwGetTime();
+			deltaTimeDying = 0;
+			lastTimeDying = glfwGetTime();
+
+			switch (zN) {
+			case 0: animationIndexZombie1 = 6;
+				std::cout << "Zombie1 eliminated" << std::endl;
+				collidersOBB.erase("Zombie1");
+				break;
+			case 1: animationIndexZombie2 = 6;
+				std::cout << "Zombie2 eliminated" << std::endl;
+				collidersOBB.erase("Zombie2");
+				break;
+			case 2: animationIndexZombie3 = 6;
+				std::cout << "Zombie3 eliminated" << std::endl;
+				collidersOBB.erase("Zombie3");
+				break;
+			case 3: animationIndexZombie4 = 6;
+				std::cout << "Zombie4 eliminated" << std::endl;
+				collidersOBB.erase("Zombie4");
+				break;
+			case 4: animationIndexZombie5 = 6;
+				std::cout << "Zombie5 eliminated" << std::endl;
+				collidersOBB.erase("Zombie5");
+				break;
+			case 5: animationIndexZombie6 = 6;
+				std::cout << "Zombie6 eliminated" << std::endl;
+				collidersOBB.erase("Zombie6");
+				break;
+			case 6: animationIndexZombie7 = 6;
+				std::cout << "Zombie7 eliminated" << std::endl;
+				collidersOBB.erase("Zombie7");
+				break;
+			}
+		}
+	}
+}
+
 
 void applicationLoop() {
 	bool psi = true;
@@ -1349,7 +2190,88 @@ void applicationLoop() {
 	modelMatrixWallF = glm::translate(modelMatrixWallF, glm::vec3(6.64f, 0.0f, -5.08f));
 	modelMatrixWallF[3][1] = terrain.getHeightTerrain(modelMatrixWallF[3][0], modelMatrixWallF[3][2]);
 
+	//Posicionamiento de Houses
+	//House A houseAMatrix = { front, left, top };
+	houseAMatrix[0] = glm::scale(houseAMatrix[0], escalamientoWalls);
+	houseAMatrix[0] = glm::translate(houseAMatrix[0], glm::vec3(7.46f, 0, -7.46f));
+	houseAMatrix[0][3][1] = terrain.getHeightTerrain(houseAMatrix[0][3][0], houseAMatrix[0][3][2]);
 
+	houseAMatrix[1] = glm::scale(houseAMatrix[1], escalamientoWalls);
+	houseAMatrix[1] = glm::translate(houseAMatrix[1], glm::vec3(4.48f, 0, -9.83f));
+	houseAMatrix[1][3][1] = terrain.getHeightTerrain(houseAMatrix[1][3][0], houseAMatrix[1][3][2]);
+
+	houseAMatrix[2] = glm::scale(houseAMatrix[2], escalamientoWalls);
+	houseAMatrix[2] = glm::translate(houseAMatrix[2], glm::vec3(8.32f, 4, -9.84f));
+	houseAMatrix[2] = glm::rotate(houseAMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseB houseBMatrix = { back, front, left1, left2, top };
+	houseBMatrix[0] = glm::scale(houseBMatrix[0], escalamientoWalls);
+	houseBMatrix[0] = glm::translate(houseBMatrix[0], glm::vec3(8.17f, 0, -2.28f));
+	houseBMatrix[0][3][1] = terrain.getHeightTerrain(houseBMatrix[0][3][0], houseBMatrix[0][3][2]);
+
+	houseBMatrix[1] = glm::scale(houseBMatrix[1], escalamientoWalls);
+	houseBMatrix[1] = glm::translate(houseBMatrix[1], glm::vec3(8.17f, 0, 9.06f));
+	houseBMatrix[1][3][1] = terrain.getHeightTerrain(houseBMatrix[1][3][0], houseBMatrix[1][3][2]);
+
+	houseBMatrix[2] = glm::scale(houseBMatrix[2], escalamientoWalls);
+	houseBMatrix[2] = glm::translate(houseBMatrix[2], glm::vec3(4.17f, 0.0f, 0.75f));
+	houseBMatrix[2][3][1] = terrain.getHeightTerrain(houseBMatrix[2][3][0], houseBMatrix[2][3][2]);
+
+	houseBMatrix[3] = glm::scale(houseBMatrix[3], escalamientoWalls);
+	houseBMatrix[3] = glm::translate(houseBMatrix[3], glm::vec3(4.17f, 0.0f, 7.146f));
+	houseBMatrix[3][3][1] = terrain.getHeightTerrain(houseBMatrix[3][3][0], houseBMatrix[3][3][2]);
+
+	houseBMatrix[4] = glm::scale(houseBMatrix[4], escalamientoWalls);
+	houseBMatrix[4] = glm::translate(houseBMatrix[4], glm::vec3(8.1637f, 4, 3.4089f));
+	houseBMatrix[4] = glm::rotate(houseBMatrix[4], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseC 	houseCMatrix = { front, left, top };
+	houseCMatrix[0] = glm::scale(houseCMatrix[0], escalamientoWalls);
+	houseCMatrix[0] = glm::translate(houseCMatrix[0], glm::vec3(-1.3614f, 0, -7.3674f));
+	houseCMatrix[0][3][1] = terrain.getHeightTerrain(houseCMatrix[0][3][0], houseCMatrix[0][3][2]);
+
+	houseCMatrix[1] = glm::scale(houseCMatrix[1], escalamientoWalls);
+	houseCMatrix[1] = glm::translate(houseCMatrix[1], glm::vec3(-3.9375f, 0, -9.7709f));
+	houseCMatrix[1][3][1] = terrain.getHeightTerrain(houseCMatrix[1][3][0], houseCMatrix[1][3][2]);
+
+	houseCMatrix[2] = glm::scale(houseCMatrix[2], escalamientoWalls);
+	houseCMatrix[2] = glm::translate(houseCMatrix[2], glm::vec3(-1.6393f, 4, -9.7861f));
+	houseCMatrix[2] = glm::rotate(houseCMatrix[2], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseD	houseDMatrix = { back, left, right, top };
+	houseDMatrix[0] = glm::scale(houseDMatrix[0], escalamientoWalls);
+	houseDMatrix[0] = glm::translate(houseDMatrix[0], glm::vec3(-1.626f, 0, -5.1438f));
+	houseDMatrix[0][3][1] = terrain.getHeightTerrain(houseDMatrix[0][3][0], houseDMatrix[0][3][2]);
+	
+	houseDMatrix[1] = glm::scale(houseDMatrix[1], escalamientoWalls);
+	houseDMatrix[1] = glm::translate(houseDMatrix[1], glm::vec3(-3.724f, 0, -2.1339f));
+	houseDMatrix[1][3][1] = terrain.getHeightTerrain(houseDMatrix[1][3][0], houseDMatrix[1][3][2]);
+
+	houseDMatrix[2] = glm::scale(houseDMatrix[2], escalamientoWalls);
+	houseDMatrix[2] = glm::translate(houseDMatrix[2], glm::vec3(0.48886f, 0, -2.1339f));
+	houseDMatrix[2][3][1] = terrain.getHeightTerrain(houseDMatrix[2][3][0], houseDMatrix[2][3][2]);
+
+	houseDMatrix[3] = glm::scale(houseDMatrix[3], escalamientoWalls);
+	houseDMatrix[3] = glm::translate(houseDMatrix[3], glm::vec3(-1.6109f, 4.0f, -2.4316f));
+	houseDMatrix[3] = glm::rotate(houseDMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+	//HouseE	houseEMatrix = { back, left, right, top };
+	houseEMatrix[0] = glm::scale(houseEMatrix[0], escalamientoWalls);
+	houseEMatrix[0] = glm::translate(houseEMatrix[0], glm::vec3(-1.5f, 0, 3.6823f));
+	houseEMatrix[0][3][1] = terrain.getHeightTerrain(houseEMatrix[0][3][0], houseEMatrix[0][3][2]);
+
+	houseEMatrix[1] = glm::scale(houseEMatrix[1], escalamientoWalls);
+	houseEMatrix[1] = glm::translate(houseEMatrix[1], glm::vec3(-3.6023f, 0, 7.4836f));
+	houseEMatrix[1][3][1] = terrain.getHeightTerrain(houseEMatrix[1][3][0], houseEMatrix[1][3][2]);
+
+	houseEMatrix[2] = glm::scale(houseEMatrix[2], escalamientoWalls);
+	houseEMatrix[2] = glm::translate(houseEMatrix[2], glm::vec3(0.6229f, 0, 8.242f));
+	houseEMatrix[2][3][1] = terrain.getHeightTerrain(houseEMatrix[2][3][0], houseEMatrix[2][3][2]);
+
+	houseEMatrix[3] = glm::scale(houseEMatrix[3], escalamientoWalls);
+	houseEMatrix[3] = glm::translate(houseEMatrix[3], glm::vec3(-1.4875f, 4, 7.9188f));
+	houseEMatrix[3] = glm::rotate(houseEMatrix[3], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	//Fountain
 	modelMatrixFountain = glm::translate(modelMatrixFountain,
 			glm::vec3(5.0, 0.0, -40.0));
 	modelMatrixFountain[3][1] = terrain.getHeightTerrain(
@@ -1358,6 +2280,62 @@ void applicationLoop() {
 			glm::vec3(10.0f, 10.0f, 10.0f));
 
 	modelMatrixZombie1 = glm::translate(modelMatrixZombie1, glm::vec3(-90.0f, 0.0f, -75.0f));
+	modelMatrixZombie2 = glm::translate(modelMatrixZombie2, glm::vec3(-8.0f, 0.0f, -49.28f));
+	modelMatrixZombie3 = glm::translate(modelMatrixZombie3, glm::vec3(-44.96f, 0.0f, 92.32f));
+	modelMatrixZombie4 = glm::translate(modelMatrixZombie4, glm::vec3(-12.0f, 0.0f, 36.88f));
+	modelMatrixZombie5 = glm::translate(modelMatrixZombie5, glm::vec3(87.12f, 0.0f, -5.36f));
+	modelMatrixZombie6 = glm::translate(modelMatrixZombie6, glm::vec3(20.48f, 0.0f, -92.16f));
+	modelMatrixZombie7 = glm::translate(modelMatrixZombie7, glm::vec3(89.07f, 0.0f, -92.9f));
+
+	//Keys random location of 5
+	keySlotSelected = dist5(rng);
+	switch (keySlotSelected) {
+	case 1:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyAPos);
+		break;
+	case 2:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyBPos);
+		break;
+	case 3:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyCPos);
+		break;
+	case 4:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyDPos);
+		break;
+	case 5:
+		modelMatrixKeyA = glm::translate(modelMatrixKeyA, KeyEPos);
+		break;
+	}
+	keySlotSelectedB = dist5(rng);
+	while (keySlotSelectedB == keySlotSelected) {
+		keySlotSelectedB = dist5(rng);
+	}
+
+	switch (keySlotSelectedB) {
+	case 1:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyAPos);
+		break;
+	case 2:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyBPos);
+		break;
+	case 3:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyCPos);
+		break;
+	case 4:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyDPos);
+		break;
+	case 5:
+		modelMatrixKeyB = glm::translate(modelMatrixKeyB, KeyEPos);
+		break;
+	}
+
+	modelMatrixKeyA = glm::scale(modelMatrixKeyA, scaleKey);
+	modelMatrixKeyB = glm::scale(modelMatrixKeyB, scaleKey);
+
+	//Red Door
+	modelMatrixRedDoor = glm::scale(modelMatrixRedDoor, scaleRedDoor);
+	modelMatrixRedDoor = glm::translate(modelMatrixRedDoor, glm::vec3(11.527f, 0, 11.0f));
+	//modelMatrixRedDoor = glm::rotate(modelMatrixRedDoor, glm::radians(180.0f), glm::vec3(0, 1, 0));
 
 	lastTime = TimeManager::Instance().GetTime();
 
@@ -1370,7 +2348,10 @@ void applicationLoop() {
 
 	glm::vec3 lightPos = glm::vec3(10.0, 10.0, 0.0);
 
-	shadowBox = new ShadowBox(-lightPos, camera.get(), 15.0f, 0.1f, 45.0f);
+	shadowBox = new ShadowBox(-lightPos, camera.get(), 100.0f, 0.1f, 60.0f);
+
+	textureActivaID = textureInit1ID;
+	textureKeysActivaID = textureKeysEmptyID;
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
@@ -1447,11 +2428,13 @@ void applicationLoop() {
 		 * Propiedades de neblina
 		 *******************************************/
 		shaderMulLighting.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.4, 0.4, 0.3)));
+		/*shaderTerrain.setVectorFloat3("fogColor",
+				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));*/
 		shaderTerrain.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.3, 0.3, 0.2)));
 		shaderSkybox.setVectorFloat3("fogColor",
-				glm::value_ptr(glm::vec3(0.5, 0.5, 0.4)));
+				glm::value_ptr(glm::vec3(0.7, 0.7, 0.6)));
 
 		/*******************************************
 		 * Propiedades Luz direccional
@@ -1578,14 +2561,10 @@ void applicationLoop() {
 		}
 		for (int i = 0; i < lamp2Position.size(); i++) {
 			glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
-			matrixAdjustLamp = glm::translate(matrixAdjustLamp,
-					lamp2Position[i]);
-			matrixAdjustLamp = glm::rotate(matrixAdjustLamp,
-					glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
-			matrixAdjustLamp = glm::scale(matrixAdjustLamp,
-					glm::vec3(1.0, 1.0, 1.0));
-			matrixAdjustLamp = glm::translate(matrixAdjustLamp,
-					glm::vec3(0.759521, 5.00174, 0));
+			matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp2Position[i]);
+			matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
+			matrixAdjustLamp = glm::scale(matrixAdjustLamp, glm::vec3(1.0, 1.0, 1.0));
+			matrixAdjustLamp = glm::translate(matrixAdjustLamp, glm::vec3(0.759521, 5.00174, 0));
 			glm::vec3 lampPosition = glm::vec3(matrixAdjustLamp[3]);
 			shaderMulLighting.setVectorFloat3(
 					"pointLights[" + std::to_string(lamp1Position.size() + i)
@@ -1635,6 +2614,19 @@ void applicationLoop() {
 			shaderTerrain.setFloat(
 					"pointLights[" + std::to_string(lamp1Position.size() + i)
 							+ "].quadratic", 0.02);
+		}
+
+		if (!iniciaPartida) {
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glViewport(0, 0, screenWidth, screenHeight);
+			shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+			shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, textureActivaID);
+			shaderTexture.setInt("outTexture", 0);
+			boxIntro.render();
+			glfwSwapBuffers(window);
+			continue;
 		}
 
 		/*******************************************
@@ -1692,6 +2684,16 @@ void applicationLoop() {
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
 		renderScene();
+
+		//Render UI
+		shaderTexture.setMatrix4("projection", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		shaderTexture.setMatrix4("view", 1, false, glm::value_ptr(glm::mat4(1.0)));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureKeysActivaID);
+		shaderTexture.setInt("outTexture", 0);
+		boxIntro.render();
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		/*******************************************
 		 * Debug to box light box
 		 *******************************************/
@@ -1768,8 +2770,155 @@ void applicationLoop() {
 		wallFCollider.e = modelWallF.getObb().e * escalamientoWalls;
 		addOrUpdateColliders(collidersOBB, "wallF", wallFCollider, modelMatrixWallF);
 
+		//Colliders Houses
+		//House A houseAMatrix = { front, left, top };
+		/*
+			houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(-90.0f), glm::vec3(0, 1, 0));
+			houseAMatrix[0] = glm::rotate(houseAMatrix[0], glm::radians(270.0f), glm::vec3(1, 0, 0));
+			houseAMatrix[1] = glm::rotate(houseAMatrix[1], glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		*/
+		glm::mat4 modelMatrixColliderHAfront = glm::mat4(houseAMatrix[0]);
+		AbstractModel::OBB HAfrontCollider;
+		HAfrontCollider.u = glm::quat_cast(houseAMatrix[0]);
+		modelMatrixColliderHAfront = glm::scale(modelMatrixColliderHAfront, escalamientoWalls);
+		modelMatrixColliderHAfront = glm::translate(modelMatrixColliderHAfront, modelHAfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HAfrontCollider.c = glm::vec3(modelMatrixColliderHAfront[3]);
+		HAfrontCollider.e = modelHAfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HA-front", HAfrontCollider, houseAMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHAleft = glm::mat4(houseAMatrix[1]);
+		AbstractModel::OBB HAleftCollider;
+		HAleftCollider.u = glm::quat_cast(houseAMatrix[1]);
+		modelMatrixColliderHAleft = glm::scale(modelMatrixColliderHAleft, escalamientoWalls);
+		modelMatrixColliderHAleft = glm::translate(modelMatrixColliderHAleft, modelHAleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		modelMatrixColliderHAleft = glm::rotate(modelMatrixColliderHAleft, glm::radians(-90.0f), glm::vec3(1,0,0));
+		HAleftCollider.c = glm::vec3(modelMatrixColliderHAleft[3]);
+		HAleftCollider.e = modelHAleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HA-left", HAleftCollider, houseAMatrix[1]);
+		//Top no necesario
+		
+		//HouseB houseBMatrix = { back, front, left1, left2, top };
+		glm::mat4 modelMatrixColliderHBback = glm::mat4(houseBMatrix[0]);
+		AbstractModel::OBB HBbackCollider;
+		HBbackCollider.u = glm::quat_cast(houseBMatrix[0]);
+		modelMatrixColliderHBback = glm::scale(modelMatrixColliderHBback, escalamientoWalls);
+		modelMatrixColliderHBback = glm::translate(modelMatrixColliderHBback, modelHBback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBbackCollider.c = glm::vec3(modelMatrixColliderHBback[3]);
+		HBbackCollider.e = modelHBback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-back", HBbackCollider, houseBMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHBfront = glm::mat4(houseBMatrix[1]);
+		AbstractModel::OBB HBfrontCollider;
+		HBfrontCollider.u = glm::quat_cast(houseBMatrix[1]);
+		modelMatrixColliderHBfront = glm::scale(modelMatrixColliderHBfront, escalamientoWalls);
+		modelMatrixColliderHBfront = glm::translate(modelMatrixColliderHBfront, modelHBfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBfrontCollider.c = glm::vec3(modelMatrixColliderHBfront[3]);
+		HBfrontCollider.e = modelHBfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-front", HBfrontCollider, houseBMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHBleft1 = glm::mat4(houseBMatrix[2]);
+		AbstractModel::OBB HBleft1Collider;
+		HBleft1Collider.u = glm::quat_cast(houseBMatrix[2]);
+		modelMatrixColliderHBleft1 = glm::scale(modelMatrixColliderHBleft1, escalamientoWalls);
+		modelMatrixColliderHBleft1 = glm::translate(modelMatrixColliderHBleft1, modelHBleft1.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBleft1Collider.c = glm::vec3(modelMatrixColliderHBleft1[3]);
+		HBleft1Collider.e = modelHBleft1.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-left1", HBleft1Collider, houseBMatrix[2]);
+
+		glm::mat4 modelMatrixColliderHBleft2 = glm::mat4(houseBMatrix[3]);
+		AbstractModel::OBB HBleft2Collider;
+		HBleft2Collider.u = glm::quat_cast(houseBMatrix[3]);
+		modelMatrixColliderHBleft2 = glm::scale(modelMatrixColliderHBleft2, escalamientoWalls);
+		modelMatrixColliderHBleft2 = glm::translate(modelMatrixColliderHBleft2, modelHBleft2.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HBleft2Collider.c = glm::vec3(modelMatrixColliderHBleft2[3]);
+		HBleft2Collider.e = modelHBleft2.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HB-left2", HBleft2Collider, houseBMatrix[3]);
+
+		//HouseC 	houseCMatrix = { front, left, top };
+		glm::mat4 modelMatrixColliderHCfront = glm::mat4(houseCMatrix[0]);
+		AbstractModel::OBB HCfrontCollider;
+		HCfrontCollider.u = glm::quat_cast(houseCMatrix[0]);
+		modelMatrixColliderHCfront = glm::scale(modelMatrixColliderHCfront, escalamientoWalls);
+		modelMatrixColliderHCfront = glm::translate(modelMatrixColliderHCfront, modelHCfront.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HCfrontCollider.c = glm::vec3(modelMatrixColliderHCfront[3]);
+		HCfrontCollider.e = modelHCfront.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HC-front", HCfrontCollider, houseCMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHCleft = glm::mat4(houseCMatrix[1]);
+		AbstractModel::OBB HCleftCollider;
+		HCleftCollider.u = glm::quat_cast(houseCMatrix[1]);
+		modelMatrixColliderHCleft = glm::scale(modelMatrixColliderHCleft, escalamientoWalls);
+		modelMatrixColliderHCleft = glm::translate(modelMatrixColliderHCleft, modelHCleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HCleftCollider.c = glm::vec3(modelMatrixColliderHCleft[3]);
+		HCleftCollider.e = modelHCleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HC-left", HCleftCollider, houseCMatrix[1]);
+		//HouseD	houseDMatrix = { back, left, right, top };
+		glm::mat4 modelMatrixColliderHDback = glm::mat4(houseDMatrix[0]);
+		AbstractModel::OBB HDbackCollider;
+		HDbackCollider.u = glm::quat_cast(houseDMatrix[0]);
+		modelMatrixColliderHDback = glm::scale(modelMatrixColliderHDback, escalamientoWalls);
+		modelMatrixColliderHDback = glm::translate(modelMatrixColliderHDback, modelHDback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDbackCollider.c = glm::vec3(modelMatrixColliderHDback[3]);
+		HDbackCollider.e = modelHDback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-back", HDbackCollider, houseDMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHDleft = glm::mat4(houseDMatrix[1]);
+		AbstractModel::OBB HDleftCollider;
+		HDleftCollider.u = glm::quat_cast(houseDMatrix[1]);
+		modelMatrixColliderHDleft = glm::scale(modelMatrixColliderHDleft, escalamientoWalls);
+		modelMatrixColliderHDleft = glm::translate(modelMatrixColliderHDleft, modelHDleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDleftCollider.c = glm::vec3(modelMatrixColliderHDleft[3]);
+		HDleftCollider.e = modelHDleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-left", HDleftCollider, houseDMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHDright = glm::mat4(houseDMatrix[2]);
+		AbstractModel::OBB HDrightCollider;
+		HDrightCollider.u = glm::quat_cast(houseDMatrix[2]);
+		modelMatrixColliderHDright = glm::scale(modelMatrixColliderHDright, escalamientoWalls);
+		modelMatrixColliderHDright = glm::translate(modelMatrixColliderHDright, modelHDright.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HDrightCollider.c = glm::vec3(modelMatrixColliderHDright[3]);
+		HDrightCollider.e = modelHDright.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HD-right", HDrightCollider, houseDMatrix[2]);
+		//HouseE	houseEMatrix = { back, left, right, top };
+		glm::mat4 modelMatrixColliderHEback = glm::mat4(houseEMatrix[0]);
+		AbstractModel::OBB HEbackCollider;
+		HEbackCollider.u = glm::quat_cast(houseEMatrix[0]);
+		modelMatrixColliderHEback = glm::scale(modelMatrixColliderHEback, escalamientoWalls);
+		modelMatrixColliderHEback = glm::translate(modelMatrixColliderHEback, modelHEback.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HEbackCollider.c = glm::vec3(modelMatrixColliderHEback[3]);
+		HEbackCollider.e = modelHEback.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-back", HEbackCollider, houseEMatrix[0]);
+
+		glm::mat4 modelMatrixColliderHEleft = glm::mat4(houseEMatrix[1]);
+		AbstractModel::OBB HEleftCollider;
+		HEleftCollider.u = glm::quat_cast(houseEMatrix[1]);
+		modelMatrixColliderHEleft = glm::scale(modelMatrixColliderHEleft, escalamientoWalls);
+		modelMatrixColliderHEleft = glm::translate(modelMatrixColliderHEleft, modelHEleft.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HEleftCollider.c = glm::vec3(modelMatrixColliderHEleft[3]);
+		HEleftCollider.e = modelHEleft.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-left", HEleftCollider, houseEMatrix[1]);
+
+		glm::mat4 modelMatrixColliderHEright = glm::mat4(houseEMatrix[2]);
+		AbstractModel::OBB HErightCollider;
+		HErightCollider.u = glm::quat_cast(houseEMatrix[2]);
+		modelMatrixColliderHEright = glm::scale(modelMatrixColliderHEright, escalamientoWalls);
+		modelMatrixColliderHEright = glm::translate(modelMatrixColliderHEright, modelHEright.getObb().c / glm::vec3(1.0f, escalamientoWalls.y, 1.0f));
+		HErightCollider.c = glm::vec3(modelMatrixColliderHEright[3]);
+		HErightCollider.e = modelHEright.getObb().e * escalamientoWalls;
+		addOrUpdateColliders(collidersOBB, "HE-right", HErightCollider, houseEMatrix[2]);
+
+		glm::mat4 modelMatrixColliderDoor = glm::mat4(modelMatrixRedDoor);
+		AbstractModel::OBB redDoorCollider;
+		redDoorCollider.u = glm::quat_cast(modelMatrixRedDoor);
+		modelMatrixColliderDoor = glm::scale(modelMatrixColliderDoor, glm::vec3(8.0f));
+		modelMatrixColliderDoor = glm::translate(modelMatrixColliderDoor, modelRedDoor.getObb().c / glm::vec3(1.0f, scaleRedDoor.y, 8.0f));
+		redDoorCollider.c = glm::vec3(modelMatrixColliderDoor[3]);
+		redDoorCollider.e = modelRedDoor.getObb().e * scaleRedDoor * glm::vec3(1.0f);
+		addOrUpdateColliders(collidersOBB, "RedDoor", redDoorCollider, modelMatrixRedDoor);
+
+
 		// Lamps1 colliders
-		for (int i = 0; i < lamp1Position.size(); i++) {
+		/*for (int i = 0; i < lamp1Position.size(); i++) {
 			AbstractModel::OBB lampCollider;
 			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
@@ -1785,10 +2934,11 @@ void applicationLoop() {
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
 					modelLamp1.getObb().c);
 			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+			//lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+			lampCollider.e = modelLamp1.getObb().e * escalamientoLampara;
 			std::get<0>(collidersOBB.find("lamp1-" + std::to_string(i))->second) =
 					lampCollider;
-		}
+		}*/
 
 		// Lamps2 colliders
 		for (int i = 0; i < lamp2Position.size(); i++) {
@@ -1807,8 +2957,8 @@ void applicationLoop() {
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
 					modelLampPost2.getObb().c);
 			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLampPost2.getObb().e
-					* glm::vec3(1.0, 1.0, 1.0);
+			//lampCollider.e = modelLampPost2.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+			lampCollider.e = modelLampPost2.getObb().e * escalamientoLampara;
 			std::get<0>(collidersOBB.find("lamp2-" + std::to_string(i))->second) =
 					lampCollider;
 		}
@@ -1824,44 +2974,147 @@ void applicationLoop() {
 		addOrUpdateColliders(collidersOBB, "Player", playerCollider, modelMatrixPlayer);
 
 		//Collider de Zombies
+		//Z1
 		AbstractModel::OBB zombieCollider1;
 		glm::mat4 modelMatrixColliderZombie1 = glm::mat4(modelMatrixZombie1);
-		zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
-		modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
-		modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
-		zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
-		zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
-		addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+		if (isZombieAlive[0]) {
+			zombieCollider1.u = glm::quat_cast(modelMatrixZombie1);
+			modelMatrixColliderZombie1 = glm::scale(modelMatrixColliderZombie1, scaleZombie);
+			modelMatrixColliderZombie1 = glm::translate(modelMatrixColliderZombie1, zombieModelAnimate1.getObb().c);
+			zombieCollider1.c = glm::vec3(modelMatrixColliderZombie1[3]);
+			zombieCollider1.e = zombieModelAnimate1.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie1", zombieCollider1, modelMatrixZombie1);
+		}
 
+		//Z2
+		AbstractModel::OBB zombieCollider2;
+		glm::mat4 modelMatrixColliderZombie2 = glm::mat4(modelMatrixZombie2);
+
+		if (isZombieAlive[1]) {
+			zombieCollider2.u = glm::quat_cast(modelMatrixZombie2);
+			modelMatrixColliderZombie2 = glm::scale(modelMatrixColliderZombie2, scaleZombie);
+			modelMatrixColliderZombie2 = glm::translate(modelMatrixColliderZombie2, zombieModelAnimate2.getObb().c);
+			zombieCollider2.c = glm::vec3(modelMatrixColliderZombie2[3]);
+			zombieCollider2.e = zombieModelAnimate2.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie2", zombieCollider2, modelMatrixZombie2);
+		}
+
+		//Z3
+		AbstractModel::OBB zombieCollider3;
+		glm::mat4 modelMatrixColliderZombie3 = glm::mat4(modelMatrixZombie3);
+
+		if (isZombieAlive[2]) {
+			zombieCollider3.u = glm::quat_cast(modelMatrixZombie3);
+			modelMatrixColliderZombie3 = glm::scale(modelMatrixColliderZombie3, scaleZombie);
+			modelMatrixColliderZombie3 = glm::translate(modelMatrixColliderZombie3, zombieModelAnimate3.getObb().c);
+			zombieCollider3.c = glm::vec3(modelMatrixColliderZombie3[3]);
+			zombieCollider3.e = zombieModelAnimate3.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie3", zombieCollider3, modelMatrixZombie3);
+		}
+
+		//Z4
+		AbstractModel::OBB zombieCollider4;
+		glm::mat4 modelMatrixColliderZombie4 = glm::mat4(modelMatrixZombie4);
+
+		if (isZombieAlive[3]) {
+			zombieCollider4.u = glm::quat_cast(modelMatrixZombie4);
+			modelMatrixColliderZombie4 = glm::scale(modelMatrixColliderZombie4, scaleZombie);
+			modelMatrixColliderZombie4 = glm::translate(modelMatrixColliderZombie4, zombieModelAnimate4.getObb().c);
+			zombieCollider4.c = glm::vec3(modelMatrixColliderZombie4[3]);
+			zombieCollider4.e = zombieModelAnimate4.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie4", zombieCollider4, modelMatrixZombie4);
+		}
+
+
+		//Z5
+		AbstractModel::OBB zombieCollider5;
+		glm::mat4 modelMatrixColliderZombie5 = glm::mat4(modelMatrixZombie5);
+		if (isZombieAlive[4]) {
+			zombieCollider5.u = glm::quat_cast(modelMatrixZombie5);
+			modelMatrixColliderZombie5 = glm::scale(modelMatrixColliderZombie5, scaleZombie);
+			modelMatrixColliderZombie5 = glm::translate(modelMatrixColliderZombie5, zombieModelAnimate5.getObb().c);
+			zombieCollider5.c = glm::vec3(modelMatrixColliderZombie5[3]);
+			zombieCollider5.e = zombieModelAnimate5.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie5", zombieCollider5, modelMatrixZombie5);
+		}
+
+		//Z6
+		AbstractModel::OBB zombieCollider6;
+		glm::mat4 modelMatrixColliderZombie6 = glm::mat4(modelMatrixZombie6);
+		if (isZombieAlive[5]) {
+			zombieCollider6.u = glm::quat_cast(modelMatrixZombie6);
+			modelMatrixColliderZombie6 = glm::scale(modelMatrixColliderZombie6, scaleZombie);
+			modelMatrixColliderZombie6 = glm::translate(modelMatrixColliderZombie6, zombieModelAnimate6.getObb().c);
+			zombieCollider6.c = glm::vec3(modelMatrixColliderZombie6[3]);
+			zombieCollider6.e = zombieModelAnimate6.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie6", zombieCollider6, modelMatrixZombie6);
+		}
+
+		//Z7
+		AbstractModel::OBB zombieCollider7;
+		glm::mat4 modelMatrixColliderZombie7 = glm::mat4(modelMatrixZombie7);
+		if (isZombieAlive[6]) {
+			zombieCollider7.u = glm::quat_cast(modelMatrixZombie7);
+			modelMatrixColliderZombie7 = glm::scale(modelMatrixColliderZombie7, scaleZombie);
+			modelMatrixColliderZombie7 = glm::translate(modelMatrixColliderZombie7, zombieModelAnimate7.getObb().c);
+			zombieCollider7.c = glm::vec3(modelMatrixColliderZombie7[3]);
+			zombieCollider7.e = zombieModelAnimate7.getObb().e * scaleZombie * glm::vec3(0.4f, 1.0f, 1.5f);
+			addOrUpdateColliders(collidersOBB, "Zombie7", zombieCollider7, modelMatrixZombie7);
+		}
+				
+		//Keys
+		AbstractModel::OBB keyColliderA;
+		glm::mat4 modelMatrixColliderKeyA = glm::mat4(modelMatrixKeyA);
+		if (isKeyCollected[0] == false) {
+			keyColliderA.u = glm::quat_cast(modelMatrixKeyA);
+			modelMatrixColliderKeyA = glm::scale(modelMatrixColliderKeyA, scaleKey);
+			modelMatrixColliderKeyA = glm::translate(modelMatrixColliderKeyA, keyModelAnimateA.getObb().c);
+			keyColliderA.c = glm::vec3(modelMatrixColliderKeyA[3]);
+			keyColliderA.e = keyModelAnimateA.getObb().e * scaleKey * glm::vec3(100.0f);
+			addOrUpdateColliders(collidersOBB, "KeyA", keyColliderA, modelMatrixKeyA);
+		}
+
+		AbstractModel::OBB keyColliderB;
+		glm::mat4 modelMatrixColliderKeyB = glm::mat4(modelMatrixKeyB);
+		if (isKeyCollected[1] == false) {
+			keyColliderB.u = glm::quat_cast(modelMatrixKeyB);
+			modelMatrixColliderKeyB = glm::scale(modelMatrixColliderKeyB, scaleKey);
+			modelMatrixColliderKeyB = glm::translate(modelMatrixColliderKeyB, keyModelAnimateB.getObb().c);
+			keyColliderB.c = glm::vec3(modelMatrixColliderKeyB[3]);
+			keyColliderB.e = keyModelAnimateB.getObb().e * scaleKey * glm::vec3(100.0f);
+			addOrUpdateColliders(collidersOBB, "KeyB", keyColliderB, modelMatrixKeyB);
+		}
 		/*******************************************
 		 * Render de colliders
 		 *******************************************/
-		for (std::map<std::string,
-				std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
-				collidersOBB.begin(); it != collidersOBB.end(); it++) {
-			glm::mat4 matrixCollider = glm::mat4(1.0);
-			matrixCollider = glm::translate(matrixCollider,
-					std::get<0>(it->second).c);
-			matrixCollider = matrixCollider
-					* glm::mat4(std::get<0>(it->second).u);
-			matrixCollider = glm::scale(matrixCollider,
-					std::get<0>(it->second).e * 2.0f);
-			boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-			boxCollider.enableWireMode();
-			boxCollider.render(matrixCollider);
-		}
+		if (renderEverything) {
+			for (std::map<std::string,
+					std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it =
+					collidersOBB.begin(); it != collidersOBB.end(); it++) {
+				glm::mat4 matrixCollider = glm::mat4(1.0);
+				matrixCollider = glm::translate(matrixCollider,
+						std::get<0>(it->second).c);
+				matrixCollider = matrixCollider
+						* glm::mat4(std::get<0>(it->second).u);
+				matrixCollider = glm::scale(matrixCollider,
+						std::get<0>(it->second).e * 2.0f);
+				boxCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+				boxCollider.enableWireMode();
+				boxCollider.render(matrixCollider);
+			}
 
-		for (std::map<std::string,
-				std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
-				collidersSBB.begin(); it != collidersSBB.end(); it++) {
-			glm::mat4 matrixCollider = glm::mat4(1.0);
-			matrixCollider = glm::translate(matrixCollider,
-					std::get<0>(it->second).c);
-			matrixCollider = glm::scale(matrixCollider,
-					glm::vec3(std::get<0>(it->second).ratio * 2.0f));
-			sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
-			sphereCollider.enableWireMode();
-			sphereCollider.render(matrixCollider);
+			for (std::map<std::string,
+					std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4> >::iterator it =
+					collidersSBB.begin(); it != collidersSBB.end(); it++) {
+				glm::mat4 matrixCollider = glm::mat4(1.0);
+				matrixCollider = glm::translate(matrixCollider,
+						std::get<0>(it->second).c);
+				matrixCollider = glm::scale(matrixCollider,
+						glm::vec3(std::get<0>(it->second).ratio * 2.0f));
+				sphereCollider.setColor(glm::vec4(1.0, 1.0, 1.0, 1.0));
+				sphereCollider.enableWireMode();
+				sphereCollider.render(matrixCollider);
+			}
 		}
 
 		/*******************************************
@@ -1874,16 +3127,50 @@ void applicationLoop() {
 			for (std::map<std::string,
 					std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator jt =
 					collidersOBB.begin(); jt != collidersOBB.end(); jt++) {
-				if (it != jt
-						&& testOBBOBB(std::get<0>(it->second),
-								std::get<0>(jt->second))) {
+				if (it != jt && testOBBOBB(std::get<0>(it->second),std::get<0>(jt->second))) {
 					std::cout << "Colision " << it->first << " with "
 							<< jt->first << std::endl;
 					isCollision = true;
+
+					if (it->first.compare("Player") == 0) {
+						if (jt->first.compare("KeyA") == 0) {
+							isKeyCollected[0] = true;
+							keysFound++;
+							collidersOBB.erase("KeyA");
+							if (keysFound == 1)
+								textureKeysActivaID = textureKeyAFoundID;
+							else if (keysFound == 2)
+								textureKeysActivaID = textureKeysCompleteID;
+						}
+						if (jt->first.compare("KeyB") == 0) {
+							isKeyCollected[1] = true;
+							keysFound++;
+							collidersOBB.erase("KeyB");
+							if (keysFound == 1)
+								textureKeysActivaID = textureKeyAFoundID;
+							else if (keysFound == 2)
+								textureKeysActivaID = textureKeysCompleteID;
+						}
+
+						/*if (jt->first.compare("Zombie1") == 0 || jt->first.compare("Zombie2") == 0 || jt->first.compare("Zombie3") == 0 || jt->first.compare("Zombie4") == 0 || jt->first.compare("Zombie5") == 0 || jt->first.compare("Zombie6") == 0 || jt->first.compare("Zombie7") == 0) {
+							if (vidasPlayer == 3)
+								vidasPlayer = 2;
+							else if (vidasPlayer == 2)
+								vidasPlayer = 1;
+							else
+								vidasPlayer = 0;
+						}*/
+						if (jt->first.compare("RedDoor") == 0) {
+							isTryingToEscape = true;
+							currTimeKeys = glfwGetTime();
+							lastTimeKeys = glfwGetTime();
+						}
+						else if (keysFound < 2)
+							isTryingToEscape = false;
+					}
 				}
 			}
-			addOrUpdateCollisionDetection(collisionDetection, it->first,
-					isCollision);
+			addOrUpdateCollisionDetection(collisionDetection, it->first, isCollision);
 		}
 
 		for (std::map<std::string,
@@ -1951,43 +3238,219 @@ void applicationLoop() {
 		}
 
 		/*******************************************
+		* Ray Test Colisions
+		*******************************************/
+
+		for (std::map < std::string, std::tuple < AbstractModel::OBB, glm::mat4, glm::mat4> >::iterator it = collidersOBB.begin(); it != collidersOBB.end(); it++) {
+			//Movimiento con ShootRay
+			if (intersectRayOBB(rayShootOri, rayShootTar, rayShootDirection, std::get<0>(it->second))) {
+				
+				if (it->first.compare("Zombie1") == 0) {
+					//std::cout << "Collision " << it->first << " with ShootRay" << std::endl;
+					isZombieInRange[0] = true;
+					if (isShooting) { 
+						//Atacar a player?
+						isZombieShooted[0] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie2") == 0) {
+					isZombieInRange[1] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[1] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie3") == 0) {
+					isZombieInRange[2] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[2] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie4") == 0) {
+					isZombieInRange[3] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[3] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie5") == 0) {
+					isZombieInRange[4] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[4] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie6") == 0) {
+					isZombieInRange[5] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[5] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+				if (it->first.compare("Zombie7") == 0) {
+					isZombieInRange[6] = true;
+					if (isShooting) {
+						//Atacar a player?
+						isZombieShooted[6] = true;
+						currTimeShooted = glfwGetTime();
+						lastTimeShooted = currTimeShooted;
+						deltaTimeShooted = 0.0f;
+					}
+				}
+			}
+		}
+
+
+		/*******************************************
 		 * Constantes de animaciones
 		 *******************************************/
 		if(!isShooting)
 			animationIndexPlayer = 0;
-		animationIndexZombie = 0;
+		//Z1
+		if(!isZombieShooted[0] && !isZombieDying[0] && isZombieAlive[0])
+			animationIndexZombie1 = 0;
+		else if (!isZombieAlive[0])
+			animationIndexZombie1 = 6;
+		//Z2
+		if (!isZombieShooted[1] && !isZombieDying[1] && isZombieAlive[1])
+			animationIndexZombie2 = 0;
+		else if (!isZombieAlive[1])
+			animationIndexZombie2 = 6;
+		//Z3
+		if (!isZombieShooted[2] && !isZombieDying[2] && isZombieAlive[2])
+			animationIndexZombie3 = 0;
+		else if (!isZombieAlive[2])
+			animationIndexZombie3 = 6;
+		//Z4
+		if (!isZombieShooted[3] && !isZombieDying[3] && isZombieAlive[3])
+			animationIndexZombie4 = 0;
+		else if (!isZombieAlive[3])
+			animationIndexZombie4 = 6;
+		//Z5
+		if (!isZombieShooted[4] && !isZombieDying[4] && isZombieAlive[4])
+			animationIndexZombie5 = 0;
+		else if (!isZombieAlive[4])
+			animationIndexZombie5 = 6;
+		//Z6
+		if (!isZombieShooted[5] && !isZombieDying[5] && isZombieAlive[5])
+			animationIndexZombie6 = 0;
+		else if (!isZombieAlive[5])
+			animationIndexZombie6 = 6;
+		//Z7
+		if (!isZombieShooted[6] && !isZombieDying[6] && isZombieAlive[6])
+			animationIndexZombie7 = 0;
+		else if (!isZombieAlive[6])
+			animationIndexZombie7 = 6;
+
+		//Triggers para audio
+		if (animationIndexPlayer == 1) {
+			sourcesPlay[18] = true;
+			sourcesPlay[1] = false;
+		}
+		else if (animationIndexPlayer == 6) {
+			sourcesPlay[18] = false;
+			sourcesPlay[1] = true;
+		}
+		else {
+			sourcesPlay[1] = false;
+			sourcesPlay[2] = false;
+		}
+//{  0		1		2	  3     4     5     6     7     8     9      10     11      12     13     14     15     16     17    18 };
+//{ fire, gunshot, z1n,  z2n,  z3n,  z4n,  z5n,  z6n,  z7n,  z1d,   z2d,   z3d,    z4d,   z5d,   z6d,   z7d,   keyA,  keyB, Walk};
+		for (int i = 0; i <= 6; i++) {
+			if (isZombieAlive[i]) {
+				//sourcesPlay[i + 2] = true;
+				//sourcesPlay[i + 9] = false;
+			}
+			else {
+				//sourcesPlay[i + 2] = false;	//Ya no vive el zombie normal
+				alSourceStop(sourcesPlay[i + 2]);
+				sourcesPlay[i + 9] = true;	//Sonido de muerte de zombie
+			}
+		}
+
+		if (isKeyCollected[0])
+			sourcesPlay[16] = true;
+		/*else
+			sourcesPlay[16] = false;*/
+		if (isKeyCollected[1])
+			sourcesPlay[17] = true;
+		/*else
+			sourcesPlay[17] = false;*/
 
 		/*******************************************
 		 * State machines
 		 *******************************************/
-
+		stateZombieGeneral(0);
+		stateZombieGeneral(1);
+		stateZombieGeneral(2);
+		stateZombieGeneral(3);
+		stateZombieGeneral(4);
+		stateZombieGeneral(5);
+		stateZombieGeneral(6);
 
 		/*******************************************
 		 * Text Rendering
 		 *******************************************/
+		std::string keysFoundStr = std::to_string(keysFound);
+		//std::string showText = "Llaves encontradas: " + keysFoundStr + " - 2";
+		//modelText->render(showText, 0.6, 0.9);
+		if (isTryingToEscape == true && keysFound < 2) {
+			currTimeKeys = glfwGetTime();
+			deltaTimeKeys += currTimeKeys - lastTimeKeys;
+			lastTimeKeys = currTimeKeys;
+			if (deltaTimeKeys < 2.0f) {
+				modelText2->render("Aun no puedes salir, necesitas 2 llaves", -0.2, 0);
+			}
+			else {
+				modelText2->render("", -0.2, 0);
+				currTimeKeys = 0.0f;
+				deltaTimeKeys = 0.0f;
+				lastTimeKeys = 0.0f;
+			}
 
-		modelText->render("Texto en openGL", -1, 0);
+		}
+		else if (keysFound == 2) {
+			modelText2->render("Felicidades! Has escapado. Presiona ESC.", -0.2, 0);
+		}
 		glfwSwapBuffers(window);
 
 		/*******************************************
 		 * Camera Update
 		 *******************************************/
 
-		if (modelSelected == 1) {
+		//if (modelSelected == 1) {
 			axis = glm::axis(glm::quat_cast(modelMatrixPlayer));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixPlayer));
 			target = playerCollider.c;
 			target.y += playerCollider.e.y;
-		}
-		else {
-		}
+		//}
 
 		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
 		if (axis.y < 0)
 			angleTarget = -angleTarget;
 		//Posiciona la camara detras de Player, hacia enfrente.
-		if (modelSelected == 1)
+		//if (modelSelected == 1)
 			angleTarget -= glm::radians(180.0f);
 		camera->setCameraTarget(target);
 		camera->setAngleTarget(angleTarget);
@@ -1998,51 +3461,7 @@ void applicationLoop() {
 		/*******************************************
 		* OpenAL sound data
 		*******************************************/
-		source0Pos[0] = modelMatrixFountain[3].x;
-		source0Pos[1] = modelMatrixFountain[3].y;
-		source0Pos[2] = modelMatrixFountain[3].z;
-		alSourcefv(source[0], AL_POSITION, source0Pos);
-
-		//eliminate source2Pos[0] = modelMatrixDart[3].x;
-		//eliminate source2Pos[1] = modelMatrixDart[3].y;
-		//eliminate source2Pos[2] = modelMatrixDart[3].z;
-		//eliminate alSourcefv(source[2], AL_POSITION, source2Pos);
-
-		// Listener for the Thris person camera
-		listenerPos[0] = modelMatrixPlayer[3].x;
-		listenerPos[1] = modelMatrixPlayer[3].y;
-		listenerPos[2] = modelMatrixPlayer[3].z;
-		alListenerfv(AL_POSITION, listenerPos);
-
-		glm::vec3 upModel = glm::normalize(modelMatrixPlayer[1]);
-		glm::vec3 frontModel = glm::normalize(modelMatrixPlayer[2]);
-
-		listenerOri[0] = frontModel.x;
-		listenerOri[1] = frontModel.y;
-		listenerOri[2] = frontModel.z;
-		listenerOri[3] = upModel.x;
-		listenerOri[4] = upModel.y;
-		listenerOri[5] = upModel.z;
-
-		// Listener for the First person camera
-		/*listenerPos[0] = camera->getPosition().x;
-		 listenerPos[1] = camera->getPosition().y;
-		 listenerPos[2] = camera->getPosition().z;
-		 alListenerfv(AL_POSITION, listenerPos);
-		 listenerOri[0] = camera->getFront().x;
-		 listenerOri[1] = camera->getFront().y;
-		 listenerOri[2] = camera->getFront().z;
-		 listenerOri[3] = camera->getUp().x;
-		 listenerOri[4] = camera->getUp().y;
-		 listenerOri[5] = camera->getUp().z;*/
-		alListenerfv(AL_ORIENTATION, listenerOri);
-
-		for (unsigned int i = 0; i < sourcesPlay.size(); i++) {
-			if (sourcesPlay[i]) {
-				sourcesPlay[i] = false;
-				alSourcePlay(source[i]);
-			}
-		}
+		openALSoundData();
 	}
 }
 
@@ -2063,6 +3482,44 @@ void prepareScene() {
 	playerModelAnimate.setShader(&shaderMulLighting);
 	//Zombies
 	zombieModelAnimate1.setShader(&shaderMulLighting);
+	zombieModelAnimate2.setShader(&shaderMulLighting);
+	zombieModelAnimate3.setShader(&shaderMulLighting);
+	zombieModelAnimate4.setShader(&shaderMulLighting);
+	zombieModelAnimate5.setShader(&shaderMulLighting);
+	zombieModelAnimate6.setShader(&shaderMulLighting);
+	zombieModelAnimate7.setShader(&shaderMulLighting);
+
+	keyModelAnimateA.setShader(&shaderMulLighting);
+	keyModelAnimateB.setShader(&shaderMulLighting);
+
+	//Walls
+	modelWallA.setShader(&shaderMulLighting);
+	modelWallB.setShader(&shaderMulLighting);
+	modelWallC.setShader(&shaderMulLighting);
+	modelWallD.setShader(&shaderMulLighting);
+	modelWallE.setShader(&shaderMulLighting);
+	//Houses
+	modelHAfront.setShader(&shaderMulLighting);
+	modelHAleft.setShader(&shaderMulLighting);
+	modelHAtop.setShader(&shaderMulLighting);
+	modelHBback.setShader(&shaderMulLighting);
+	modelHBfront.setShader(&shaderMulLighting);
+	modelHBleft1.setShader(&shaderMulLighting);
+	modelHBleft2.setShader(&shaderMulLighting);
+	modelHBtop.setShader(&shaderMulLighting);
+	modelHCfront.setShader(&shaderMulLighting);
+	modelHCleft.setShader(&shaderMulLighting);
+	modelHCtop.setShader(&shaderMulLighting);
+	modelHDback.setShader(&shaderMulLighting);
+	modelHDleft.setShader(&shaderMulLighting);
+	modelHDright.setShader(&shaderMulLighting);
+	modelHDtop.setShader(&shaderMulLighting);
+	modelHEback.setShader(&shaderMulLighting);
+	modelHEleft.setShader(&shaderMulLighting);
+	modelHEright.setShader(&shaderMulLighting);
+	modelHEtop.setShader(&shaderMulLighting);
+	//Door
+	modelRedDoor.setShader(&shaderMulLighting);
 }
 
 void prepareDepthScene() {
@@ -2082,6 +3539,44 @@ void prepareDepthScene() {
 	playerModelAnimate.setShader(&shaderDepth);
 	//Zombies
 	zombieModelAnimate1.setShader(&shaderDepth);
+	zombieModelAnimate2.setShader(&shaderDepth);
+	zombieModelAnimate3.setShader(&shaderDepth);
+	zombieModelAnimate4.setShader(&shaderDepth);
+	zombieModelAnimate5.setShader(&shaderDepth);
+	zombieModelAnimate6.setShader(&shaderDepth);
+	zombieModelAnimate7.setShader(&shaderDepth);
+
+	keyModelAnimateA.setShader(&shaderDepth);
+	keyModelAnimateB.setShader(&shaderDepth);
+
+	//Walls
+	/*modelWallA.setShader(&shaderDepth);
+	modelWallB.setShader(&shaderDepth);
+	modelWallC.setShader(&shaderDepth);
+	modelWallD.setShader(&shaderDepth);
+	modelWallE.setShader(&shaderDepth);*/
+	//Houses
+	modelHAfront.setShader(&shaderDepth);
+	modelHAleft.setShader(&shaderDepth);
+	modelHAtop.setShader(&shaderDepth);
+	modelHBback.setShader(&shaderDepth);
+	modelHBfront.setShader(&shaderDepth);
+	modelHBleft1.setShader(&shaderDepth);
+	modelHBleft2.setShader(&shaderDepth);
+	modelHBtop.setShader(&shaderDepth);
+	modelHCfront.setShader(&shaderDepth);
+	modelHCleft.setShader(&shaderDepth);
+	modelHCtop.setShader(&shaderDepth);
+	modelHDback.setShader(&shaderDepth);
+	modelHDleft.setShader(&shaderDepth);
+	modelHDright.setShader(&shaderDepth);
+	modelHDtop.setShader(&shaderDepth);
+	modelHEback.setShader(&shaderDepth);
+	modelHEleft.setShader(&shaderDepth);
+	modelHEright.setShader(&shaderDepth);
+	modelHEtop.setShader(&shaderDepth);
+	//Door
+	modelRedDoor.setShader(&shaderDepth);
 }
 
 void renderScene(bool renderParticles) {
@@ -2123,24 +3618,25 @@ void renderScene(bool renderParticles) {
 	glActiveTexture(GL_TEXTURE0);
 
 	// Render the lamps
+	/*
 	for (int i = 0; i < lamp1Position.size(); i++) {
 		lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x,
 				lamp1Position[i].z);
 		modelLamp1.setPosition(lamp1Position[i]);
-		modelLamp1.setScale(glm::vec3(0.5, 0.5, 0.5));
+		modelLamp1.setScale(escalamientoLampara);
 		modelLamp1.setOrientation(glm::vec3(0, lamp1Orientation[i], 0));
 		modelLamp1.render();
-	}
+	}*/
 
 	for (int i = 0; i < lamp2Position.size(); i++) {
 		lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x,
 				lamp2Position[i].z);
 		modelLamp2.setPosition(lamp2Position[i]);
-		modelLamp2.setScale(glm::vec3(1.0, 1.0, 1.0));
+		modelLamp2.setScale(escalamientoLampara);
 		modelLamp2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLamp2.render();
 		modelLampPost2.setPosition(lamp2Position[i]);
-		modelLampPost2.setScale(glm::vec3(1.0, 1.0, 1.0));
+		modelLampPost2.setScale(escalamientoLampara);
 		modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLampPost2.render();
 	}
@@ -2168,7 +3664,40 @@ void renderScene(bool renderParticles) {
 	modelWallE.render(modelMatrixWallE);
 	modelWallF.render(modelMatrixWallF);
 
+	//House Render
+	//HouseA	houseAMatrix = { front, left, top };
+	//HouseB	houseBMatrix = { back, front, left1, left2, top };
+	//HouseC 	houseCMatrix = { front, left, top };
+	//HouseD	houseDMatrix = { back, left, right, top };
+	//HouseE	houseEMatrix = { back, left, right, top };
+
+
+	modelHAfront.render(houseAMatrix[0]);
+	modelHAleft.render(houseAMatrix[1]);
+	modelHAtop.render(houseAMatrix[2]);
+	modelHBback.render(houseBMatrix[0]);
+	modelHBfront.render(houseBMatrix[1]);
+	modelHBleft1.render(houseBMatrix[2]);
+	modelHBleft2.render(houseBMatrix[3]);
+	modelHBtop.render(houseBMatrix[4]);
+	modelHCfront.render(houseCMatrix[0]);
+	modelHCleft.render(houseCMatrix[1]);
+	modelHCtop.render(houseCMatrix[2]);
+	modelHDback.render(houseDMatrix[0]);
+	modelHDleft.render(houseDMatrix[1]);
+	modelHDright.render(houseDMatrix[2]);
+	modelHDtop.render(houseDMatrix[3]);
+	modelHEback.render(houseEMatrix[0]);
+	modelHEleft.render(houseEMatrix[1]);
+	modelHEright.render(houseEMatrix[2]);
+	modelHEtop.render(houseEMatrix[3]);
 	
+	if(isKeyCollected[0] == false)
+		keyModelAnimateA.render(modelMatrixKeyA);
+	if(isKeyCollected[1] == false)
+		keyModelAnimateB.render(modelMatrixKeyB);
+
+	modelRedDoor.render(modelMatrixRedDoor);
 	/*******************************************
 	 * Custom Anim objects obj
 	 *******************************************/
@@ -2190,8 +3719,66 @@ void renderScene(bool renderParticles) {
 	modelMatrixZombie1[3][1] = terrain.getHeightTerrain(modelMatrixZombie1[3][0], modelMatrixZombie1[3][2]);
 	glm::mat4 modelMatrixZombieBody1 = glm::mat4(modelMatrixZombie1);
 	modelMatrixZombieBody1 = glm::scale(modelMatrixZombieBody1, scaleZombie);
-	zombieModelAnimate1.setAnimationIndex(animationIndexZombie);
+	zombieModelAnimate1.setAnimationIndex(animationIndexZombie1);
 	zombieModelAnimate1.render(modelMatrixZombieBody1);
+
+	modelMatrixZombie2[3][1] = terrain.getHeightTerrain(modelMatrixZombie2[3][0], modelMatrixZombie2[3][2]);
+	glm::mat4 modelMatrixZombieBody2 = glm::mat4(modelMatrixZombie2);
+	modelMatrixZombieBody2 = glm::scale(modelMatrixZombieBody2, scaleZombie);
+	modelMatrixZombieBody2 = glm::rotate(modelMatrixZombieBody2, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+	zombieModelAnimate2.setAnimationIndex(animationIndexZombie2);
+	zombieModelAnimate2.render(modelMatrixZombieBody2);
+
+	modelMatrixZombie3[3][1] = terrain.getHeightTerrain(modelMatrixZombie3[3][0], modelMatrixZombie3[3][2]);
+	glm::mat4 modelMatrixZombieBody3 = glm::mat4(modelMatrixZombie3);
+	modelMatrixZombieBody3 = glm::scale(modelMatrixZombieBody3, scaleZombie);
+	modelMatrixZombieBody3 = glm::rotate(modelMatrixZombieBody3, glm::radians(180.0f), glm::vec3(0, 1, 0));
+	zombieModelAnimate3.setAnimationIndex(animationIndexZombie3);
+	zombieModelAnimate3.render(modelMatrixZombieBody3);
+
+	modelMatrixZombie4[3][1] = terrain.getHeightTerrain(modelMatrixZombie4[3][0], modelMatrixZombie4[3][2]);
+	glm::mat4 modelMatrixZombieBody4 = glm::mat4(modelMatrixZombie4);
+	modelMatrixZombieBody4 = glm::scale(modelMatrixZombieBody4, scaleZombie);
+	zombieModelAnimate4.setAnimationIndex(animationIndexZombie4);
+	zombieModelAnimate4.render(modelMatrixZombieBody4);
+
+	modelMatrixZombie5[3][1] = terrain.getHeightTerrain(modelMatrixZombie5[3][0], modelMatrixZombie5[3][2]);
+	glm::mat4 modelMatrixZombieBody5 = glm::mat4(modelMatrixZombie5);
+	modelMatrixZombieBody5 = glm::scale(modelMatrixZombieBody5, scaleZombie);
+	modelMatrixZombieBody5 = glm::rotate(modelMatrixZombieBody5, glm::radians(-45.0f), glm::vec3(0, 1, 0));
+	zombieModelAnimate5.setAnimationIndex(animationIndexZombie5);
+	zombieModelAnimate5.render(modelMatrixZombieBody5);
+
+	modelMatrixZombie6[3][1] = terrain.getHeightTerrain(modelMatrixZombie6[3][0], modelMatrixZombie6[3][2]);
+	glm::mat4 modelMatrixZombieBody6 = glm::mat4(modelMatrixZombie6);
+	modelMatrixZombieBody6 = glm::scale(modelMatrixZombieBody6, scaleZombie);
+	zombieModelAnimate6.setAnimationIndex(animationIndexZombie6);
+	zombieModelAnimate6.render(modelMatrixZombieBody6);
+
+	modelMatrixZombie7[3][1] = terrain.getHeightTerrain(modelMatrixZombie7[3][0], modelMatrixZombie7[3][2]);
+	glm::mat4 modelMatrixZombieBody7 = glm::mat4(modelMatrixZombie7);
+	modelMatrixZombieBody7 = glm::scale(modelMatrixZombieBody7, scaleZombie);
+	zombieModelAnimate7.setAnimationIndex(animationIndexZombie7);
+	zombieModelAnimate7.render(modelMatrixZombieBody7);
+
+
+	/*******************************************
+	* Rayos
+	*******************************************/
+	//Ray in Player view direction
+	glm::mat4 modelMatrixPlayerShootRay = glm::mat4(modelMatrixPlayer);
+	modelMatrixPlayerShootRay = glm::translate(modelMatrixPlayerShootRay, glm::vec3(0, 10.0, 0));
+	rayShootDirection = glm::normalize(glm::vec3(-modelMatrixPlayerShootRay[2]));
+	rayShootOri = glm::vec3(modelMatrixPlayerShootRay[3]);
+	rayShootTar = rayShootOri + 30.0f + rayShootDirection;
+	glm::vec3 rayShootDmd = rayShootOri + 15.0f * rayShootDirection;
+	modelMatrixPlayerShootRay[3] = glm::vec4(rayShootDmd, 1.0);
+	modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+	//modelMatrixPlayerShootRay = glm::rotate(modelMatrixPlayerShootRay, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+	modelMatrixPlayerShootRay = glm::scale(modelMatrixPlayerShootRay, glm::vec3(1.0, 30.0, 1.0));
+	if(renderEverything)
+		cylinderShoot.render(modelMatrixPlayerShootRay);
+
 
 	/*******************************************
 	* Update the position with alpha objects
@@ -2324,10 +3911,10 @@ void renderScene(bool renderParticles) {
 			/****************************+
 			 * Open AL sound data
 			 */
-			source1Pos[0] = modelFireParticles[3].x;
-			source1Pos[1] = modelFireParticles[3].y;
-			source1Pos[2] = modelFireParticles[3].z;
-			alSourcefv(source[1], AL_POSITION, source1Pos);
+			source0Pos[0] = modelFireParticles[3].x;
+			source0Pos[1] = modelFireParticles[3].y;
+			source0Pos[2] = modelFireParticles[3].z;
+			alSourcefv(source[0], AL_POSITION, source0Pos);
 
 			/**********
 			 * End Render particles systems
@@ -2335,6 +3922,99 @@ void renderScene(bool renderParticles) {
 		}
 
 	}
+
+	/****************************+
+	* Open AL sound data
+	*/
+
+	//ZombieNormal 1
+	sourceZ1NPos[0] = modelMatrixZombie1[3].x;
+	sourceZ1NPos[1] = modelMatrixZombie1[3].y;
+	sourceZ1NPos[2] = modelMatrixZombie1[3].z;
+	alSourcefv(source[2], AL_POSITION, sourceZ1NPos);
+	//ZombieNormal 2
+	sourceZ2NPos[0] = modelMatrixZombie2[3].x;
+	sourceZ2NPos[1] = modelMatrixZombie2[3].y;
+	sourceZ2NPos[2] = modelMatrixZombie2[3].z;
+	alSourcefv(source[3], AL_POSITION, sourceZ2NPos);
+	//ZombieNormal 3
+	sourceZ3NPos[0] = modelMatrixZombie3[3].x;
+	sourceZ3NPos[1] = modelMatrixZombie3[3].y;
+	sourceZ3NPos[2] = modelMatrixZombie3[3].z;
+	alSourcefv(source[4], AL_POSITION, sourceZ3NPos);
+	//ZombieNormal 4
+	sourceZ4NPos[0] = modelMatrixZombie4[3].x;
+	sourceZ4NPos[1] = modelMatrixZombie4[3].y;
+	sourceZ4NPos[2] = modelMatrixZombie4[3].z;
+	alSourcefv(source[5], AL_POSITION, sourceZ4NPos);
+	//ZombieNormal 5
+	sourceZ5NPos[0] = modelMatrixZombie5[3].x;
+	sourceZ5NPos[1] = modelMatrixZombie5[3].y;
+	sourceZ5NPos[2] = modelMatrixZombie5[3].z;
+	alSourcefv(source[6], AL_POSITION, sourceZ5NPos);
+	//ZombieNormal 6
+	sourceZ6NPos[0] = modelMatrixZombie6[3].x;
+	sourceZ6NPos[1] = modelMatrixZombie6[3].y;
+	sourceZ6NPos[2] = modelMatrixZombie6[3].z;
+	alSourcefv(source[7], AL_POSITION, sourceZ6NPos);
+	//ZombieNormal 7
+	sourceZ7NPos[0] = modelMatrixZombie7[3].x;
+	sourceZ7NPos[1] = modelMatrixZombie7[3].y;
+	sourceZ7NPos[2] = modelMatrixZombie7[3].z;
+	alSourcefv(source[8], AL_POSITION, sourceZ7NPos);
+
+	//ZombieDie 1
+	sourceZ1DPos[0] = modelMatrixZombie1[3].x;
+	sourceZ1DPos[1] = modelMatrixZombie1[3].y;
+	sourceZ1DPos[2] = modelMatrixZombie1[3].z;
+	alSourcefv(source[9], AL_POSITION, sourceZ1DPos);
+	//ZombieDie 2
+	sourceZ2DPos[0] = modelMatrixZombie2[3].x;
+	sourceZ2DPos[1] = modelMatrixZombie2[3].y;
+	sourceZ2DPos[2] = modelMatrixZombie2[3].z;
+	alSourcefv(source[10], AL_POSITION, sourceZ2DPos);
+	//ZombieDie 3
+	sourceZ3DPos[0] = modelMatrixZombie3[3].x;
+	sourceZ3DPos[1] = modelMatrixZombie3[3].y;
+	sourceZ3DPos[2] = modelMatrixZombie3[3].z;
+	alSourcefv(source[11], AL_POSITION, sourceZ3DPos);
+	//ZombieDie 4
+	sourceZ4DPos[0] = modelMatrixZombie4[3].x;
+	sourceZ4DPos[1] = modelMatrixZombie4[3].y;
+	sourceZ4DPos[2] = modelMatrixZombie4[3].z;
+	alSourcefv(source[12], AL_POSITION, sourceZ4DPos);
+	//ZombieDie 5
+	sourceZ5DPos[0] = modelMatrixZombie5[3].x;
+	sourceZ5DPos[1] = modelMatrixZombie5[3].y;
+	sourceZ5DPos[2] = modelMatrixZombie5[3].z;
+	alSourcefv(source[13], AL_POSITION, sourceZ5DPos);
+	//ZombieDie 6
+	sourceZ6DPos[0] = modelMatrixZombie6[3].x;
+	sourceZ6DPos[1] = modelMatrixZombie6[3].y;
+	sourceZ6DPos[2] = modelMatrixZombie6[3].z;
+	alSourcefv(source[14], AL_POSITION, sourceZ6DPos);
+	//ZombieDie 7
+	sourceZ7DPos[0] = modelMatrixZombie7[3].x;
+	sourceZ7DPos[1] = modelMatrixZombie7[3].y;
+	sourceZ7DPos[2] = modelMatrixZombie7[3].z;
+	alSourcefv(source[15], AL_POSITION, sourceZ7DPos);
+
+	//CollectKeyA
+	sourceKeyAPos[0] = modelMatrixKeyA[3].x;
+	sourceKeyAPos[1] = modelMatrixKeyA[3].y;
+	sourceKeyAPos[2] = modelMatrixKeyA[3].z;
+	alSourcefv(source[16], AL_POSITION, sourceKeyAPos);
+	//CollectKeyB
+	sourceKeyBPos[0] = modelMatrixKeyB[3].x;
+	sourceKeyBPos[1] = modelMatrixKeyB[3].y;
+	sourceKeyBPos[2] = modelMatrixKeyB[3].z;
+	alSourcefv(source[17], AL_POSITION, sourceKeyBPos);
+
+	//CollectKeyA
+	sourceWalkPos[0] = modelMatrixPlayer[3].x;
+	sourceWalkPos[1] = modelMatrixPlayer[3].y;
+	sourceWalkPos[2] = modelMatrixPlayer[3].z;
+	alSourcefv(source[18], AL_POSITION, sourceWalkPos);
 	glEnable(GL_CULL_FACE);
 }
 
