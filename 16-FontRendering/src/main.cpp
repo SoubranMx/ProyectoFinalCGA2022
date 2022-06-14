@@ -150,6 +150,7 @@ ShadowBox *shadowBox;
 Model modelLamp1;
 Model modelLamp2;
 Model modelLampPost2;
+glm::vec3 escalamientoLampara = glm::vec3(0.5*7);
 // Hierba
 Model modelGrass;
 // Fountain
@@ -300,9 +301,9 @@ bool renderEverything = true;
 std::vector<glm::vec3> lamp1Position = { glm::vec3(-7.03, 0, -19.14), glm::vec3(
 		24.41, 0, -34.57), glm::vec3(-10.15, 0, -54.10) };
 std::vector<float> lamp1Orientation = { -17.0, -82.67, 23.70 };
-std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24),
-		glm::vec3(-52.73, 0, -3.90) };
-std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90 };
+//std::vector<glm::vec3> lamp2Position = { glm::vec3(-36.52, 0, -23.24), glm::vec3(-52.73, 0, -3.90) };
+std::vector<glm::vec3> lamp2Position = { glm::vec3(-82.4, 0, 0), glm::vec3(15.92, 0, -31.44), glm::vec3(-55.2, 0, 72.16), glm::vec3(13.68, 0, -55.28) };
+std::vector<float> lamp2Orientation = { 21.37 + 90, -65.0 + 90, 23.5 + 90, -60.0 + 90 };
 
 // Blending model unsorted
 std::map<std::string, glm::vec3> blendingUnsorted = { { "aircraft", glm::vec3(
@@ -1992,9 +1993,9 @@ void stateZombieGeneral(int zN) {
 		if (zombieLife[zN] == 3)
 			zombieSpeed[zN] = 1;
 		else if (zombieLife[zN] == 2)
-			zombieSpeed[zN] = 1.5;
+			zombieSpeed[zN] = 2.0;
 		else
-			zombieSpeed[zN] = 2.5;
+			zombieSpeed[zN] = 3.5;
 		if (zombieLife[zN] == 0) {
 			switch (zN) {
 			case 1:
@@ -2560,14 +2561,10 @@ void applicationLoop() {
 		}
 		for (int i = 0; i < lamp2Position.size(); i++) {
 			glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
-			matrixAdjustLamp = glm::translate(matrixAdjustLamp,
-					lamp2Position[i]);
-			matrixAdjustLamp = glm::rotate(matrixAdjustLamp,
-					glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
-			matrixAdjustLamp = glm::scale(matrixAdjustLamp,
-					glm::vec3(1.0, 1.0, 1.0));
-			matrixAdjustLamp = glm::translate(matrixAdjustLamp,
-					glm::vec3(0.759521, 5.00174, 0));
+			matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp2Position[i]);
+			matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
+			matrixAdjustLamp = glm::scale(matrixAdjustLamp, glm::vec3(1.0, 1.0, 1.0));
+			matrixAdjustLamp = glm::translate(matrixAdjustLamp, glm::vec3(0.759521, 5.00174, 0));
 			glm::vec3 lampPosition = glm::vec3(matrixAdjustLamp[3]);
 			shaderMulLighting.setVectorFloat3(
 					"pointLights[" + std::to_string(lamp1Position.size() + i)
@@ -2921,7 +2918,7 @@ void applicationLoop() {
 
 
 		// Lamps1 colliders
-		for (int i = 0; i < lamp1Position.size(); i++) {
+		/*for (int i = 0; i < lamp1Position.size(); i++) {
 			AbstractModel::OBB lampCollider;
 			glm::mat4 modelMatrixColliderLamp = glm::mat4(1.0);
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
@@ -2937,10 +2934,11 @@ void applicationLoop() {
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
 					modelLamp1.getObb().c);
 			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+			//lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
+			lampCollider.e = modelLamp1.getObb().e * escalamientoLampara;
 			std::get<0>(collidersOBB.find("lamp1-" + std::to_string(i))->second) =
 					lampCollider;
-		}
+		}*/
 
 		// Lamps2 colliders
 		for (int i = 0; i < lamp2Position.size(); i++) {
@@ -2959,8 +2957,8 @@ void applicationLoop() {
 			modelMatrixColliderLamp = glm::translate(modelMatrixColliderLamp,
 					modelLampPost2.getObb().c);
 			lampCollider.c = glm::vec3(modelMatrixColliderLamp[3]);
-			lampCollider.e = modelLampPost2.getObb().e
-					* glm::vec3(1.0, 1.0, 1.0);
+			//lampCollider.e = modelLampPost2.getObb().e * glm::vec3(1.0, 1.0, 1.0);
+			lampCollider.e = modelLampPost2.getObb().e * escalamientoLampara;
 			std::get<0>(collidersOBB.find("lamp2-" + std::to_string(i))->second) =
 					lampCollider;
 		}
@@ -3442,8 +3440,9 @@ void applicationLoop() {
 			}
 
 		}
-		else if (keysFound == 2)
-			modelText2->render("Felicidades! Has escapado.", -0.2, 0);
+		else if (keysFound == 2) {
+			modelText2->render("Felicidades! Has escapado. Presiona ESC.", -0.2, 0);
+		}
 		glfwSwapBuffers(window);
 
 		/*******************************************
@@ -3630,24 +3629,25 @@ void renderScene(bool renderParticles) {
 	glActiveTexture(GL_TEXTURE0);
 
 	// Render the lamps
+	/*
 	for (int i = 0; i < lamp1Position.size(); i++) {
 		lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x,
 				lamp1Position[i].z);
 		modelLamp1.setPosition(lamp1Position[i]);
-		modelLamp1.setScale(glm::vec3(0.5, 0.5, 0.5));
+		modelLamp1.setScale(escalamientoLampara);
 		modelLamp1.setOrientation(glm::vec3(0, lamp1Orientation[i], 0));
 		modelLamp1.render();
-	}
+	}*/
 
 	for (int i = 0; i < lamp2Position.size(); i++) {
 		lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x,
 				lamp2Position[i].z);
 		modelLamp2.setPosition(lamp2Position[i]);
-		modelLamp2.setScale(glm::vec3(1.0, 1.0, 1.0));
+		modelLamp2.setScale(escalamientoLampara);
 		modelLamp2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLamp2.render();
 		modelLampPost2.setPosition(lamp2Position[i]);
-		modelLampPost2.setScale(glm::vec3(1.0, 1.0, 1.0));
+		modelLampPost2.setScale(escalamientoLampara);
 		modelLampPost2.setOrientation(glm::vec3(0, lamp2Orientation[i], 0));
 		modelLampPost2.render();
 	}
